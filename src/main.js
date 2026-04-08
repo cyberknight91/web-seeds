@@ -87,8 +87,8 @@ function renderHomePage() {
     <!-- HERO -->
     <section class="hero-section">
       <div class="hero-content fade-in">
-        <img src="/images/logo.jpg" alt="Growel Druida" class="hero-logo" />
-        <h2 class="hero-title">GROWEL DRUIDA</h2>
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" />
+        <h2 class="hero-title">GROW EL DRUIDA</h2>
         <p class="hero-subtitle">Tu Coffee Shop Online - Las mejores geneticas y el mejor equipo de cultivo</p>
         <div class="hero-badges">
           <span class="hero-badge">+70 Variedades</span>
@@ -275,12 +275,12 @@ function renderAboutPage() {
     <section class="about-section">
       <div class="about-content">
         <div class="about-text">
-          <p><strong>Growel Druida</strong> nace de la pasion por las mejores geneticas cannabicas y la cultura del coffee shop de Amsterdam.</p>
+          <p><strong>Grow El Druida</strong> nace de la pasion por las mejores geneticas cannabicas y la cultura del coffee shop de Amsterdam.</p>
           <p>Combinamos semillas de coleccion de los mejores breeders europeos y americanos con un grow shop completo donde encontraras todo el equipamiento profesional que necesitas.</p>
           <p>Trabajamos con marcas reconocidas como <strong>Exotic Seed</strong> para nuestras geneticas y <strong>Natural Systems</strong> para el equipamiento de cultivo, garantizando la maxima calidad en cada producto.</p>
           <p>Nuestro equipo cuenta con mas de <strong>20 anos de experiencia</strong> en el sector, asesorandote en cada paso de tu proyecto de cultivo.</p>
         </div>
-        <img src="/images/logo.jpg" alt="Growel Druida" class="about-img" />
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="about-img" />
       </div>
       <div class="about-features">
         <div class="about-feature">
@@ -542,7 +542,7 @@ function buildOrderText() {
   const envio = cart.getTotal() >= 50 ? 'GRATIS' : '5.00 EUR';
   const totalFinal = cart.getTotal() >= 50 ? total : (cart.getTotal() + 5).toFixed(2);
 
-  return `NUEVO PEDIDO - Growel Druida
+  return `NUEVO PEDIDO - Grow El Druida
 =========================================
 PRODUCTOS:
 ${items}
