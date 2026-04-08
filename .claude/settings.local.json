@@ -1,0 +1,31 @@
+{
+  "permissions": {
+    "allow": [
+      "WebFetch(domain:www.exoticseed.eu)",
+      "WebFetch(domain:naturalsystems.es)",
+      "WebFetch(domain:github.com)",
+      "WebFetch(domain:raw.githubusercontent.com)",
+      "Bash(gh repo:*)",
+      "Bash(gh api:*)",
+      "Bash(npm create:*)",
+      "Bash(npx --yes create-vite temp-project --template vanilla)",
+      "Bash(cp temp-project/* temp-project/.* .)",
+      "Bash(cp -r temp-project/* .)",
+      "Bash(mv temp-project/index.html .)",
+      "Bash(mv temp-project/package.json .)",
+      "Bash(cp -r temp-project/public .)",
+      "Bash(cp -r temp-project/src .)",
+      "Bash(mv temp-project/.gitignore .)",
+      "Bash(mkdir -p public/images)",
+      "Bash(cp PHOTO-2026-04-07-19-48-12.jpg public/images/logo.jpg)",
+      "Bash(npm install:*)",
+      "Bash(rm -f src/counter.js)",
+      "Bash(rm -rf src/assets)",
+      "Bash(rm -f public/favicon.svg public/icons.svg)",
+      "Bash(npx vite:*)",
+      "Bash(npx autoskills:*)",
+      "Bash(npm run:*)",
+      "Bash(curl -s http://localhost:3000)"
+    ]
+  }
+}

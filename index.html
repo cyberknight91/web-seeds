@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Aarry Andaidasis Seed - Cannabis Seeds & Grow Shop</title>
+  <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
+  <link href="https://fonts.googleapis.com/css2?family=Bangers&family=Comic+Neue:wght@400;700&family=Fredoka+One&display=swap" rel="stylesheet" />
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <!-- Floating smoke particles -->
+  <div id="smoke-container"></div>
+
+  <!-- Header -->
+  <header class="header">
+    <div class="header-inner">
+      <a href="#" class="logo-link" data-page="home">
+        <img src="/images/logo.jpg" alt="Aarry Andaidasis Seed" class="logo-img" />
+        <div class="logo-text">
+          <h1>Aarry Andaidasis</h1>
+          <span class="logo-subtitle">SEED SHOP</span>
+        </div>
+      </a>
+      <nav class="main-nav">
+        <a href="#" class="nav-link active" data-page="home">Inicio</a>
+        <a href="#" class="nav-link" data-page="seeds">Semillas</a>
+        <a href="#" class="nav-link" data-page="grow">Grow Shop</a>
+        <a href="#" class="nav-link" data-page="offers">Ofertas</a>
+        <a href="#" class="nav-link" data-page="about">Nosotros</a>
+      </nav>
+      <div class="header-actions">
+        <div class="search-box">
+          <input type="text" id="search-input" placeholder="Buscar productos..." />
+          <button class="search-btn">&#128269;</button>
+        </div>
+        <button class="cart-btn" id="cart-btn">
+          &#128722; <span class="cart-count" id="cart-count">0</span>
+        </button>
+        <button class="menu-toggle" id="menu-toggle">&#9776;</button>
+      </div>
+    </div>
+  </header>
+
+  <!-- Mobile nav -->
+  <div class="mobile-nav" id="mobile-nav">
+    <a href="#" class="nav-link active" data-page="home">Inicio</a>
+    <a href="#" class="nav-link" data-page="seeds">Semillas</a>
+    <a href="#" class="nav-link" data-page="grow">Grow Shop</a>
+    <a href="#" class="nav-link" data-page="offers">Ofertas</a>
+    <a href="#" class="nav-link" data-page="about">Nosotros</a>
+  </div>
+
+  <!-- Main Content -->
+  <main id="app"></main>
+
+  <!-- Cart Sidebar -->
+  <div class="cart-overlay" id="cart-overlay"></div>
+  <aside class="cart-sidebar" id="cart-sidebar">
+    <div class="cart-header">
+      <h2>Tu Carrito</h2>
+      <button class="cart-close" id="cart-close">&#10005;</button>
+    </div>
+    <div class="cart-items" id="cart-items"></div>
+    <div class="cart-footer">
+      <div class="cart-total">
+        <span>Total:</span>
+        <span id="cart-total-price">0.00 &euro;</span>
+      </div>
+      <button class="checkout-btn">Finalizar Compra</button>
+    </div>
+  </aside>
+
+  <!-- Footer -->
+  <footer class="footer">
+    <div class="footer-inner">
+      <div class="footer-col">
+        <img src="/images/logo.jpg" alt="Logo" class="footer-logo" />
+        <p>Tu coffee shop online con las mejores geneticas y el mejor equipo de cultivo.</p>
+      </div>
+      <div class="footer-col">
+        <h3>Semillas</h3>
+        <a href="#" data-page="seeds" data-filter="feminized">Feminizadas</a>
+        <a href="#" data-page="seeds" data-filter="auto">Autoflorecientes</a>
+        <a href="#" data-page="seeds" data-filter="regular">Regulares</a>
+        <a href="#" data-page="seeds" data-filter="cbd">CBD</a>
+      </div>
+      <div class="footer-col">
+        <h3>Grow Shop</h3>
+        <a href="#" data-page="grow" data-filter="lighting">Iluminacion</a>
+        <a href="#" data-page="grow" data-filter="fertilizers">Fertilizantes</a>
+        <a href="#" data-page="grow" data-filter="substrates">Sustratos</a>
+        <a href="#" data-page="grow" data-filter="climate">Control Clima</a>
+      </div>
+      <div class="footer-col">
+        <h3>Contacto</h3>
+        <p>info@aarryseeds.com</p>
+        <p>+34 600 000 000</p>
+        <div class="social-links">
+          <a href="#">FB</a>
+          <a href="#">IG</a>
+          <a href="#">TW</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <p>&copy; 2026 Aarry Andaidasis Seed Shop. Todos los derechos reservados.</p>
+      <p class="disclaimer">Los productos se venden como articulos de coleccionismo. Consulta la legislacion vigente en tu pais.</p>
+    </div>
+  </footer>
+
+  <!-- Checkout Modal -->
+  <div class="checkout-overlay" id="checkout-overlay"></div>
+  <div class="checkout-modal" id="checkout-modal">
+    <div class="checkout-inner">
+      <!-- Step 1: Datos -->
+      <div class="checkout-step" id="checkout-step-1">
+        <div class="checkout-header">
+          <h2>Datos de Envio</h2>
+          <button class="checkout-close" id="checkout-close">&times;</button>
+        </div>
+        <form id="checkout-form" autocomplete="on">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkout-name">Nombre completo *</label>
+              <input type="text" id="checkout-name" name="name" required placeholder="Tu nombre" autocomplete="name" />
+            </div>
+            <div class="form-group">
+              <label for="checkout-phone">Telefono / WhatsApp *</label>
+              <input type="tel" id="checkout-phone" name="phone" required placeholder="+34 600 000 000" autocomplete="tel" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="checkout-email">Email *</label>
+            <input type="email" id="checkout-email" name="email" required placeholder="tu@email.com" autocomplete="email" />
+          </div>
+          <div class="form-group">
+            <label for="checkout-address">Direccion de envio *</label>
+            <input type="text" id="checkout-address" name="address" required placeholder="Calle, numero, piso..." autocomplete="street-address" />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="checkout-city">Ciudad *</label>
+              <input type="text" id="checkout-city" name="city" required placeholder="Ciudad" autocomplete="address-level2" />
+            </div>
+            <div class="form-group">
+              <label for="checkout-zip">Codigo Postal *</label>
+              <input type="text" id="checkout-zip" name="zip" required placeholder="28001" autocomplete="postal-code" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="checkout-notes">Notas del pedido (opcional)</label>
+            <textarea id="checkout-notes" name="notes" rows="3" placeholder="Instrucciones especiales, horario de entrega..."></textarea>
+          </div>
+          <button type="submit" class="btn-checkout-next">Revisar Pedido &rarr;</button>
+        </form>
+      </div>
+
+      <!-- Step 2: Resumen -->
+      <div class="checkout-step hidden" id="checkout-step-2">
+        <div class="checkout-header">
+          <h2>Resumen del Pedido</h2>
+          <button class="checkout-back" id="checkout-back">&larr; Volver</button>
+        </div>
+        <div id="checkout-summary"></div>
+        <div class="checkout-actions">
+          <button class="btn-checkout-whatsapp" id="btn-send-whatsapp">Enviar Pedido por WhatsApp</button>
+          <button class="btn-checkout-email" id="btn-send-email">Enviar Pedido por Email</button>
+        </div>
+      </div>
+
+      <!-- Step 3: Confirmacion -->
+      <div class="checkout-step hidden" id="checkout-step-3">
+        <div class="checkout-confirmed">
+          <div class="confirmed-icon">&#10003;</div>
+          <h2>Pedido Enviado</h2>
+          <p>Hemos recibido tu pedido. Te contactaremos pronto para confirmar los detalles y el pago.</p>
+          <button class="btn-checkout-next" id="checkout-done">Volver a la Tienda</button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>
