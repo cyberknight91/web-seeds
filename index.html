@@ -34,6 +34,7 @@
           <input type="text" id="search-input" placeholder="Buscar productos..." />
           <button class="search-btn">&#128269;</button>
         </div>
+        <button class="auth-btn" id="auth-btn">Iniciar Sesion</button>
         <button class="cart-btn" id="cart-btn">
           &#128722; <span class="cart-count" id="cart-count">0</span>
         </button>
@@ -49,6 +50,7 @@
     <a href="#" class="nav-link" data-page="grow">Grow Shop</a>
     <a href="#" class="nav-link" data-page="offers">Ofertas</a>
     <a href="#" class="nav-link" data-page="about">Nosotros</a>
+    <a href="#" class="nav-link mobile-auth-link" id="mobile-auth-link">Iniciar Sesion</a>
   </div>
 
   <!-- Main Content -->
@@ -178,6 +180,47 @@
           <button class="btn-checkout-next" id="checkout-done">Volver a la Tienda</button>
         </div>
       </div>
+    </div>
+  </div>
+
+  <!-- Auth Modal -->
+  <div class="auth-overlay" id="auth-overlay"></div>
+  <div class="auth-modal" id="auth-modal">
+    <div class="auth-inner">
+      <button class="auth-close" id="auth-close">&times;</button>
+      <div class="auth-tabs">
+        <button class="auth-tab active" data-tab="login">Iniciar Sesion</button>
+        <button class="auth-tab" data-tab="register">Registrarse</button>
+      </div>
+      <form id="login-form" class="auth-form">
+        <div class="form-group">
+          <label for="login-email">Email</label>
+          <input type="email" id="login-email" required placeholder="tu@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="login-password">Contrasena</label>
+          <input type="password" id="login-password" required placeholder="Tu contrasena" />
+        </div>
+        <div id="login-error" class="auth-error hidden"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
+      </form>
+      <form id="register-form" class="auth-form hidden">
+        <div class="form-group">
+          <label for="register-name">Nombre completo</label>
+          <input type="text" id="register-name" required placeholder="Tu nombre" />
+        </div>
+        <div class="form-group">
+          <label for="register-email">Email</label>
+          <input type="email" id="register-email" required placeholder="tu@email.com" />
+        </div>
+        <div class="form-group">
+          <label for="register-password">Contrasena</label>
+          <input type="password" id="register-password" required minlength="6" placeholder="Minimo 6 caracteres" />
+        </div>
+        <div id="register-error" class="auth-error hidden"></div>
+        <div id="register-success" class="auth-success hidden"></div>
+        <button type="submit" class="btn btn-primary" style="width:100%">Crear Cuenta</button>
+      </form>
     </div>
   </div>
 

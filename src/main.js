@@ -2,6 +2,8 @@ import './style.css';
 import { seeds, growProducts, allProducts, seedCategories, growCategories } from './data/products.js';
 import { cart, renderCart, showToast } from './cart.js';
 import { createSmokeParticles } from './effects.js';
+import { initAuth, getCurrentUser, getProfile } from './auth.js';
+import { saveOrder, getMyOrders } from './orders.js';
 
 // ============================================
 // APP STATE
@@ -69,6 +71,8 @@ function navigateTo(page, filter = 'all') {
     case 'grow': renderGrowPage(filter); break;
     case 'offers': renderOffersPage(); break;
     case 'about': renderAboutPage(); break;
+    case 'orders': renderOrdersPage(); break;
+    case 'profile': renderProfilePage(); break;
   }
 
   // Scroll to top
@@ -318,6 +322,190 @@ function renderAboutPage() {
   `;
 }
 
+// ============================================
+// ORDERS PAGE
+// ============================================
+async function renderOrdersPage() {
+  const app = document.getElementById('app');
+  const user = getCurrentUser();
+
+  if (!user) {
+    app.innerHTML = `
+      <section class="products-section" style="text-align:center; padding: 80px 20px;">
+        <div class="no-results">
+          <div class="no-results-icon">&#128274;</div>
+          <p>Inicia sesion para ver tus pedidos</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+
+  app.innerHTML = `
+    <section class="hero-section" style="padding: 40px 20px;">
+      <div class="hero-content">
+        <h2 class="hero-title" style="font-size: 3rem;">MIS PEDIDOS</h2>
+        <p class="hero-subtitle">Historial de tus compras</p>
+      </div>
+    </section>
+    <section class="products-section">
+      <div class="orders-loading">Cargando pedidos...</div>
+    </section>
+  `;
+
+  try {
+    const orders = await getMyOrders();
+    const container = app.querySelector('.products-section');
+
+    if (orders.length === 0) {
+      container.innerHTML = `
+        <div class="no-results">
+          <div class="no-results-icon">&#128230;</div>
+          <p>Aun no tienes pedidos</p>
+        </div>
+      `;
+      return;
+    }
+
+    container.innerHTML = `
+      <div class="orders-list fade-in">
+        ${orders.map(order => {
+          const date = new Date(order.created_at).toLocaleDateString('es-ES', {
+            day: 'numeric', month: 'long', year: 'numeric'
+          });
+          const statusMap = {
+            pending: 'Pendiente',
+            confirmed: 'Confirmado',
+            shipped: 'Enviado',
+            delivered: 'Entregado',
+            cancelled: 'Cancelado'
+          };
+          const statusClass = order.status === 'delivered' ? 'status-delivered' :
+                             order.status === 'cancelled' ? 'status-cancelled' : 'status-pending';
+
+          return `
+            <div class="order-card">
+              <div class="order-card-header">
+                <div>
+                  <span class="order-number">Pedido #${order.order_number}</span>
+                  <span class="order-date">${date}</span>
+                </div>
+                <span class="order-status ${statusClass}">${statusMap[order.status] || order.status}</span>
+              </div>
+              <div class="order-card-items">
+                ${order.order_items.map(item => `
+                  <div class="order-item-row">
+                    <span>${item.product_name} ${item.product_label ? `(${item.product_label})` : ''} x${item.quantity}</span>
+                    <span>${item.subtotal.toFixed(2)} &euro;</span>
+                  </div>
+                `).join('')}
+              </div>
+              <div class="order-card-footer">
+                <span>Envio: ${order.shipping_cost > 0 ? order.shipping_cost.toFixed(2) + ' &euro;' : 'GRATIS'}</span>
+                <span class="order-total">Total: ${order.total.toFixed(2)} &euro;</span>
+              </div>
+            </div>
+          `;
+        }).join('')}
+      </div>
+    `;
+  } catch (err) {
+    app.querySelector('.products-section').innerHTML = `
+      <div class="no-results">
+        <div class="no-results-icon">&#9888;</div>
+        <p>Error al cargar pedidos</p>
+      </div>
+    `;
+  }
+}
+
+// ============================================
+// PROFILE PAGE
+// ============================================
+async function renderProfilePage() {
+  const app = document.getElementById('app');
+  const user = getCurrentUser();
+
+  if (!user) {
+    app.innerHTML = `
+      <section class="products-section" style="text-align:center; padding: 80px 20px;">
+        <div class="no-results">
+          <div class="no-results-icon">&#128274;</div>
+          <p>Inicia sesion para ver tu perfil</p>
+        </div>
+      </section>
+    `;
+    return;
+  }
+
+  const profile = await getProfile();
+
+  app.innerHTML = `
+    <section class="hero-section" style="padding: 40px 20px;">
+      <div class="hero-content">
+        <h2 class="hero-title" style="font-size: 3rem;">MI PERFIL</h2>
+        <p class="hero-subtitle">${user.email}</p>
+      </div>
+    </section>
+    <section class="products-section">
+      <div class="profile-form-wrap fade-in">
+        <form id="profile-form">
+          <div class="form-row">
+            <div class="form-group">
+              <label for="profile-name">Nombre completo</label>
+              <input type="text" id="profile-name" value="${profile?.full_name || ''}" placeholder="Tu nombre" />
+            </div>
+            <div class="form-group">
+              <label for="profile-phone">Telefono</label>
+              <input type="tel" id="profile-phone" value="${profile?.phone || ''}" placeholder="+34 600 000 000" />
+            </div>
+          </div>
+          <div class="form-group">
+            <label for="profile-address">Direccion</label>
+            <input type="text" id="profile-address" value="${profile?.address || ''}" placeholder="Calle, numero, piso..." />
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label for="profile-city">Ciudad</label>
+              <input type="text" id="profile-city" value="${profile?.city || ''}" placeholder="Ciudad" />
+            </div>
+            <div class="form-group">
+              <label for="profile-zip">Codigo Postal</label>
+              <input type="text" id="profile-zip" value="${profile?.zip || ''}" placeholder="28001" />
+            </div>
+          </div>
+          <div id="profile-msg" class="auth-success hidden"></div>
+          <button type="submit" class="btn btn-primary" style="margin-top: 16px;">Guardar Cambios</button>
+        </form>
+      </div>
+    </section>
+  `;
+
+  document.getElementById('profile-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    const { updateProfile } = await import('./auth.js');
+    const msgEl = document.getElementById('profile-msg');
+
+    const { error } = await updateProfile({
+      full_name: document.getElementById('profile-name').value.trim(),
+      phone: document.getElementById('profile-phone').value.trim(),
+      address: document.getElementById('profile-address').value.trim(),
+      city: document.getElementById('profile-city').value.trim(),
+      zip: document.getElementById('profile-zip').value.trim()
+    });
+
+    if (error) {
+      msgEl.textContent = 'Error al guardar';
+      msgEl.style.color = 'var(--neon-red)';
+    } else {
+      msgEl.textContent = 'Perfil actualizado';
+      msgEl.style.color = 'var(--neon-green)';
+    }
+    msgEl.classList.remove('hidden');
+    setTimeout(() => msgEl.classList.add('hidden'), 3000);
+  });
+}
+
 function renderSearchResults(query) {
   const app = document.getElementById('app');
   const q = query.toLowerCase();
@@ -517,10 +705,24 @@ const SHOP_EMAIL = 'info@groweldruida.es';
 
 let checkoutData = {};
 
-function openCheckout() {
+async function openCheckout() {
   document.getElementById('checkout-modal').classList.add('open');
   document.getElementById('checkout-overlay').classList.add('open');
   showCheckoutStep(1);
+
+  // Pre-fill form for logged-in users
+  const user = getCurrentUser();
+  if (user) {
+    document.getElementById('checkout-email').value = user.email || '';
+    document.getElementById('checkout-name').value = user.user_metadata?.full_name || '';
+    const profile = await getProfile();
+    if (profile) {
+      if (profile.phone) document.getElementById('checkout-phone').value = profile.phone;
+      if (profile.address) document.getElementById('checkout-address').value = profile.address;
+      if (profile.city) document.getElementById('checkout-city').value = profile.city;
+      if (profile.zip) document.getElementById('checkout-zip').value = profile.zip;
+    }
+  }
 }
 
 function closeCheckout() {
@@ -630,7 +832,12 @@ function initCheckout() {
     showCheckoutStep(2);
   });
 
-  whatsappBtn.addEventListener('click', () => {
+  whatsappBtn.addEventListener('click', async () => {
+    try {
+      await saveOrder(checkoutData, cart.items, cart.getTotal());
+    } catch (err) {
+      console.error('Error saving order:', err);
+    }
     const text = encodeURIComponent(buildOrderText());
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, '_blank');
     cart.clear();
@@ -638,7 +845,12 @@ function initCheckout() {
     showCheckoutStep(3);
   });
 
-  emailBtn.addEventListener('click', () => {
+  emailBtn.addEventListener('click', async () => {
+    try {
+      await saveOrder(checkoutData, cart.items, cart.getTotal());
+    } catch (err) {
+      console.error('Error saving order:', err);
+    }
     const subject = encodeURIComponent(`Pedido - ${checkoutData.name}`);
     const body = encodeURIComponent(buildOrderText());
     window.open(`mailto:${SHOP_EMAIL}?subject=${subject}&body=${body}`, '_blank');
@@ -657,11 +869,13 @@ function initCheckout() {
 // ============================================
 // INIT
 // ============================================
-function init() {
+async function init() {
   initNavigation();
   initCart();
   initCheckout();
   createSmokeParticles();
+  await initAuth();
+  window.__navigateTo = navigateTo;
   renderHomePage();
 }
 
