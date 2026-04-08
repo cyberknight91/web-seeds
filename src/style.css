@@ -1552,18 +1552,8 @@ img {
     display: none;
   }
 
-  .header-actions {
-    gap: 8px;
-  }
-
-  .auth-btn {
-    padding: 6px 10px;
-    font-size: 0.7rem;
-  }
-
-  .cart-btn {
-    padding: 6px 10px;
-    font-size: 0.85rem;
+  .header-actions .auth-btn {
+    display: none;
   }
 }
 
