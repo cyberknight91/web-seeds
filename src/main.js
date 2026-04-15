@@ -71,6 +71,7 @@ function navigateTo(page, filter = 'all') {
     case 'grow': renderGrowPage(filter); break;
     case 'offers': renderOffersPage(); break;
     case 'about': renderAboutPage(); break;
+    case 'partners': renderPartnersPage(); break;
     case 'orders': renderOrdersPage(); break;
     case 'profile': renderProfilePage(); break;
   }
@@ -166,11 +167,18 @@ function renderHomePage() {
       </div>
     </section>
 
-    <!-- BANNER -->
-    <section class="featured-banner">
-      <h2>PACKS MIX - VARIEDAD AL MEJOR PRECIO</h2>
-      <p>Descubre nuestros packs tematicos: Sativa, Indica, Purple, Quick y mas</p>
-      <a href="#" class="btn btn-primary" data-page="seeds" data-filter="feminized" style="position:relative;z-index:1;">Ver Packs</a>
+    <!-- PARTNERS TEASER -->
+    <section class="partners-section" style="padding: 64px 20px;">
+      <div class="partners-wrap">
+        <div class="partners-head">
+          <span class="eyebrow">Partner oficial</span>
+          <h2>Distribuidores de Exotic Seed</h2>
+          <p>Colaboramos directamente con uno de los bancos de semillas más reconocidos de Europa. Genética auténtica, stock real, precios de partner.</p>
+        </div>
+        <div style="text-align:center;">
+          <a href="#" class="btn btn-primary" data-page="partners">Ver nuestros partners →</a>
+        </div>
+      </div>
     </section>
 
     <!-- FEATURED GROW -->
@@ -263,6 +271,63 @@ function renderOffersPage() {
     </section>
   `;
 
+  bindProductEvents();
+}
+
+function renderPartnersPage() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <section class="hero-section" style="padding: 60px 20px;">
+      <div class="hero-content fade-in">
+        <h2 class="hero-title">NUESTROS PARTNERS</h2>
+        <p class="hero-subtitle">Trabajamos con los mejores bancos de semillas y distribuidores de equipamiento profesional. Colaboraciones reales, genética garantizada, precios de partner.</p>
+      </div>
+    </section>
+
+    <section class="partners-section">
+      <div class="partners-wrap">
+        <div class="partners-head">
+          <span class="eyebrow">Partner oficial · Genética</span>
+          <h2>Exotic Seed — nuestro banco de referencia</h2>
+          <p>Distribuidor oficial. Llevamos años trabajando con Exotic Seed porque sus genéticas hablan por sí solas: cepas estables, fenotipos consistentes y resultados que se notan en la cosecha.</p>
+        </div>
+
+        <article class="partner-card">
+          <div class="partner-card-media">
+            <div class="partner-mark">EXOTIC<br/>SEED</div>
+          </div>
+          <div class="partner-card-body">
+            <span class="partner-kicker">Banco de semillas · España</span>
+            <h3>Genética de élite, catálogo completo</h3>
+            <p>
+              Exotic Seed es uno de los bancos referentes en Europa, con más de una década
+              trabajando genéticas exclusivas. Toda su colección de feminizadas,
+              autoflorecientes, regulares y CBD está disponible a través de nosotros —
+              con la misma autenticidad y garantía que comprando directamente en su web.
+            </p>
+            <div class="partner-feats">
+              <span>+70 variedades</span>
+              <span>Genética USA & EU</span>
+              <span>Stock garantizado</span>
+              <span>Envío discreto</span>
+              <span>Precios competitivos</span>
+            </div>
+            <div class="partner-cta-row">
+              <a href="https://www.exoticseed.eu/" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visitar Exotic Seed →</a>
+              <a href="#" class="btn btn-secondary" data-page="seeds">Ver catálogo aquí</a>
+            </div>
+          </div>
+        </article>
+
+        <div style="text-align:center; margin-top:64px;">
+          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight:600; color: var(--text-primary); margin-bottom:8px;">¿Eres distribuidor o tienda?</h3>
+          <p style="color: var(--text-secondary); max-width:58ch; margin: 0 auto;">Si tienes un grow shop físico o una tienda online y quieres condiciones mayoristas, escríbenos. Trabajamos con pedidos al por mayor bajo acuerdo.</p>
+          <a href="mailto:info@groweldruida.es?subject=Contacto%20B2B" class="btn btn-primary" style="margin-top:20px; display:inline-block;">Contactar para B2B</a>
+        </div>
+      </div>
+    </section>
+  `;
+  bindNavigationEvents();
   bindProductEvents();
 }
 
