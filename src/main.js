@@ -8,7 +8,7 @@ import {
   degradedMode,
   totalProductCount,
 } from './data/products.js';
-import { fetchProducts } from './supabase.js';
+import { fetchProducts, fetchProductByCode } from './supabase.js';
 import { cart, renderCart, showToast } from './cart.js';
 import { createSmokeParticles } from './effects.js';
 import { initAuth, getCurrentUser, getProfile } from './auth.js';
@@ -62,7 +62,7 @@ function initNavigation() {
   });
 }
 
-function navigateTo(page, filter = 'all') {
+function navigateTo(page, filter = 'all', extra = null) {
   currentPage = page;
   currentFilter = filter;
 
@@ -83,6 +83,7 @@ function navigateTo(page, filter = 'all') {
     case 'partners': renderPartnersPage(); break;
     case 'orders': renderOrdersPage(); break;
     case 'profile': renderProfilePage(); break;
+    case 'product': renderProductDetail(extra ?? filter); break;
   }
 
   // Scroll to top
@@ -672,7 +673,7 @@ function renderGrowCard(product) {
   const disabled = !product.inStock ? 'disabled' : '';
   const outOfStockLabel = !product.inStock ? '<span class="product-card-offer" style="background:#555;">AGOTADO</span>' : '';
   return `
-    <div class="product-card" data-id="${product.id}">
+    <div class="product-card" data-id="${product.id}" data-product-link="${product.id}">
       ${product.badge ? `<span class="product-card-badge badge-${product.badge.toLowerCase()}">${product.badge}</span>` : ''}
       ${product.offer ? `<span class="product-card-offer">OFERTA</span>` : outOfStockLabel}
       <div class="product-card-img-wrap">
@@ -705,8 +706,10 @@ function renderGrowCard(product) {
 // EVENT BINDING
 // ============================================
 function bindProductEvents() {
+  // Click en boton "Anadir al carrito": solo anade, no navega
   document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
+    btn.addEventListener('click', (e) => {
+      e.stopPropagation();
       if (btn.disabled) return;
       const id = btn.dataset.id;
       const name = btn.dataset.name || id;
@@ -723,6 +726,16 @@ function bindProductEvents() {
 
       renderCart();
       showToast(`${name} anadido al carrito`);
+    });
+  });
+
+  // Click en cualquier otra zona de la card: navega al detalle del producto
+  document.querySelectorAll('[data-product-link]').forEach(card => {
+    card.addEventListener('click', (e) => {
+      // No hacer nada si el click fue en el boton (ya manejado arriba con stopPropagation)
+      if (e.target.closest('.add-to-cart-btn')) return;
+      const id = card.dataset.productLink;
+      navigateTo('product', null, id);
     });
   });
 }
@@ -947,6 +960,155 @@ function initCheckout() {
     form.reset();
     navigateTo('home');
   });
+}
+
+// ============================================
+// PRODUCT DETAIL PAGE
+// ============================================
+async function renderProductDetail(itemCode) {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <section class="product-detail-loading">
+      <div class="hero-content" style="text-align:center; padding:100px 20px;">
+        <p>Cargando producto...</p>
+      </div>
+    </section>
+  `;
+
+  const product = await fetchProductByCode(itemCode);
+  if (!product) {
+    app.innerHTML = `
+      <section class="hero-section" style="padding: 80px 20px; text-align:center;">
+        <div class="hero-content">
+          <h2 class="hero-title" style="font-size: 2rem;">Producto no encontrado</h2>
+          <p class="hero-subtitle">El producto "${itemCode}" no existe o ya no est&aacute; disponible.</p>
+          <div class="hero-cta" style="justify-content:center; margin-top:20px;">
+            <button type="button" class="btn btn-primary" data-page="grow">Volver al cat&aacute;logo</button>
+          </div>
+        </div>
+      </section>
+    `;
+    bindNavigationEvents();
+    return;
+  }
+
+  const dims = product.weight || product.width || product.height || product.length
+    ? `
+      <div class="product-detail-meta">
+        ${product.weight ? `<div><strong>Peso:</strong> ${product.weight} kg</div>` : ''}
+        ${product.width ? `<div><strong>Ancho:</strong> ${product.width} cm</div>` : ''}
+        ${product.height ? `<div><strong>Alto:</strong> ${product.height} cm</div>` : ''}
+        ${product.length ? `<div><strong>Largo:</strong> ${product.length} cm</div>` : ''}
+        ${product.uomCode ? `<div><strong>Unidad:</strong> ${product.uomCode}</div>` : ''}
+      </div>
+    `
+    : '';
+
+  const stockBadge = product.inStock
+    ? `<span class="detail-stock-ok">&#10003; Disponible${product.stock < 100 ? ` (${product.stock} uds)` : ''}</span>`
+    : `<span class="detail-stock-out">&#10007; Agotado</span>`;
+
+  const safeName = (product.name || '').replace(/"/g, '&quot;');
+  const disabled = !product.inStock ? 'disabled' : '';
+
+  app.innerHTML = `
+    <section class="product-detail">
+      <div class="product-detail-wrap">
+        <nav class="breadcrumbs" aria-label="Breadcrumb">
+          <a href="#" data-page="home">Inicio</a>
+          <span aria-hidden="true">›</span>
+          <a href="#" data-page="grow">Grow Shop</a>
+          <span aria-hidden="true">›</span>
+          <span>${product.id}</span>
+        </nav>
+
+        <div class="product-detail-grid">
+          <div class="product-detail-media">
+            <img src="${product.image}" alt="${safeName}" class="product-detail-img" />
+          </div>
+
+          <div class="product-detail-info">
+            ${product.isPlaceholder ? '<div class="detail-placeholder-note"><strong>Catalogo en actualizacion.</strong> Nombre completo, descripcion e imagen definitiva disponibles en breve. Precio y stock son reales.</div>' : ''}
+
+            <div class="detail-kicker">${product.brand || 'Referencia'}</div>
+            <h1 class="detail-title">${product.name}</h1>
+            <div class="detail-itemcode">C&oacute;digo: <code>${product.id}</code></div>
+
+            ${product.description ? `<p class="detail-description">${product.description}</p>` : ''}
+
+            <div class="detail-price-block">
+              <div class="detail-price">${product.price.toFixed(2)}&euro;</div>
+              ${product.offer && product.oldPrice ? `<div class="detail-old-price">${product.oldPrice.toFixed(2)}&euro;</div>` : ''}
+              <div class="detail-tax-note">IVA incluido</div>
+            </div>
+
+            <div class="detail-stock">${stockBadge}</div>
+
+            ${dims}
+
+            ${product.technicalDetails ? `
+              <details class="detail-technical">
+                <summary>Detalles t&eacute;cnicos</summary>
+                <div>${product.technicalDetails}</div>
+              </details>
+            ` : ''}
+
+            <div class="detail-actions">
+              <div class="detail-qty">
+                <button type="button" class="qty-btn" id="qty-minus" aria-label="Disminuir">&minus;</button>
+                <input type="number" id="qty-input" value="1" min="1" max="${Math.max(1, product.stock)}" />
+                <button type="button" class="qty-btn" id="qty-plus" aria-label="Aumentar">+</button>
+              </div>
+              <button type="button"
+                      class="add-to-cart-btn detail-add-btn"
+                      id="detail-add-to-cart"
+                      data-id="${product.id}"
+                      data-name="${safeName}"
+                      data-price="${product.price}"
+                      data-image="${product.image}"
+                      ${disabled}>
+                ${product.inStock ? 'A&ntilde;adir al carrito' : 'Agotado'}
+              </button>
+            </div>
+
+            <div class="detail-back">
+              <a href="#" data-page="grow" class="detail-back-link">&larr; Volver al cat&aacute;logo</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  `;
+
+  // Bindings
+  bindNavigationEvents();
+
+  const qtyInput = document.getElementById('qty-input');
+  document.getElementById('qty-minus').addEventListener('click', () => {
+    qtyInput.value = Math.max(1, parseInt(qtyInput.value, 10) - 1);
+  });
+  document.getElementById('qty-plus').addEventListener('click', () => {
+    const max = parseInt(qtyInput.max, 10) || 1;
+    qtyInput.value = Math.min(max, parseInt(qtyInput.value, 10) + 1);
+  });
+
+  const addBtn = document.getElementById('detail-add-to-cart');
+  if (addBtn && !addBtn.disabled) {
+    addBtn.addEventListener('click', () => {
+      const qty = Math.max(1, parseInt(qtyInput.value, 10) || 1);
+      for (let i = 0; i < qty; i++) {
+        cart.addItem({
+          id: product.id,
+          name: product.name,
+          price: product.price,
+          image: product.image,
+          label: '1 ud.',
+        });
+      }
+      renderCart();
+      showToast(`${qty} x ${product.name} anadido al carrito`);
+    });
+  }
 }
 
 // ============================================

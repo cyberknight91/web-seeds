@@ -104,6 +104,23 @@ export async function fetchProducts({
 }
 
 /**
+ * Fetch un producto por itemCode. Devuelve null si no existe o esta inactivo.
+ */
+export async function fetchProductByCode(itemCode) {
+  const { data, error } = await supabase
+    .from('products')
+    .select('*')
+    .eq('active', true)
+    .eq('item_code', itemCode)
+    .maybeSingle()
+  if (error) {
+    console.error('[fetchProductByCode] error:', error.message)
+    return null
+  }
+  return data ? mapDbProduct(data) : null
+}
+
+/**
  * Fetch categorias desde Supabase.
  * Si NS no ha devuelto categorias aun (bug), devuelve []
  */
