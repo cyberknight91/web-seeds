@@ -493,6 +493,80 @@ img {
   box-shadow: 0 0 20px rgba(255, 45, 149, 0.1);
 }
 
+/* ============================================
+   CATALOG CONTROLS (ordenar + mostrar agotados)
+   ============================================ */
+.catalog-controls {
+  display: flex;
+  justify-content: flex-end;
+  gap: 20px;
+  flex-wrap: wrap;
+  margin: 12px 0 20px;
+  padding: 0 4px;
+}
+.catalog-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.88rem;
+  color: var(--text-secondary, #aaa);
+  cursor: pointer;
+  user-select: none;
+}
+.catalog-control input[type="checkbox"] {
+  accent-color: #00ff88;
+  width: 16px;
+  height: 16px;
+  cursor: pointer;
+}
+.catalog-control select {
+  background: var(--bg-surface, #1a1a1f);
+  color: var(--text, #ddd);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  padding: 6px 10px;
+  border-radius: 6px;
+  font-family: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+.catalog-control select:focus {
+  outline: 1px solid #00ff88;
+  outline-offset: 0;
+}
+
+/* ============================================
+   SKELETON LOADERS
+   ============================================ */
+.product-card-skeleton {
+  pointer-events: none;
+  opacity: 0.7;
+}
+.skeleton-img {
+  aspect-ratio: 1;
+  background: linear-gradient(90deg, rgba(255,255,255,0.03) 0%, rgba(255,255,255,0.08) 50%, rgba(255,255,255,0.03) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 8px;
+}
+.skeleton-body {
+  padding: 14px;
+}
+.skeleton-line {
+  height: 10px;
+  background: linear-gradient(90deg, rgba(255,255,255,0.04) 0%, rgba(255,255,255,0.12) 50%, rgba(255,255,255,0.04) 100%);
+  background-size: 200% 100%;
+  animation: skeleton-shimmer 1.4s ease-in-out infinite;
+  border-radius: 4px;
+  margin-bottom: 8px;
+}
+.skeleton-line-wide { width: 85%; }
+.skeleton-line-mid { width: 60%; }
+.skeleton-line-short { width: 35%; height: 14px; }
+@keyframes skeleton-shimmer {
+  0% { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
 /* Links legales en footer-bottom */
 .footer-legal {
   display: flex;

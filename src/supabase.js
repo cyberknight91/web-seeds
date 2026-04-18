@@ -16,9 +16,13 @@ export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
  */
 function mapDbProduct(row) {
   const isPlaceholder = row.name === row.item_code
+  // Nombre humanizado mientras NS no devuelva productName real:
+  // "ABRA0004" -> "Referencia ABRA0004"
+  const displayName = isPlaceholder ? `Referencia ${row.item_code}` : row.name
   return {
     id: row.item_code,
-    name: row.name,
+    name: displayName,
+    rawName: row.name,
     slug: row.slug,
     category: row.category_ns_id ?? 'all',
     brand: row.manufacturer ?? '',
@@ -58,14 +62,24 @@ export async function fetchProducts({
   limit = 50,
   offset = 0,
   onlyInStock = false,
+  sort = 'default', // 'default' | 'price-asc' | 'price-desc'
 } = {}) {
   let q = supabase
     .from('products')
     .select('*', { count: 'exact' })
     .eq('active', true)
-    .order('in_stock', { ascending: false })
-    .order('item_code', { ascending: true })
-    .range(offset, offset + limit - 1)
+
+  // Sort: usamos la columna generada `display_price` que ya tiene la logica
+  // COALESCE(pvp>0 ? pvp : price). Asi el orden coincide con el precio mostrado.
+  if (sort === 'price-asc') {
+    q = q.order('in_stock', { ascending: false }).order('display_price', { ascending: true, nullsFirst: false })
+  } else if (sort === 'price-desc') {
+    q = q.order('in_stock', { ascending: false }).order('display_price', { ascending: false, nullsFirst: false })
+  } else {
+    q = q.order('in_stock', { ascending: false }).order('item_code', { ascending: true })
+  }
+
+  q = q.range(offset, offset + limit - 1)
 
   if (category && category !== 'all') q = q.eq('category_ns_id', category)
   if (offersOnly) q = q.eq('offer', true)

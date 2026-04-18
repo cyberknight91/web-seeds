@@ -171,19 +171,38 @@ function renderDegradedBanner() {
   `;
 }
 
-// Estado de paginacion persistente entre renders
-let growPageState = { filter: 'all', offset: 0, products: [], total: 0, degraded: false }
+// Estado persistente entre renders. Se resetea al cambiar filtro u opciones.
+let growPageState = {
+  filter: 'all',
+  offset: 0,
+  products: [],
+  total: 0,
+  degraded: false,
+  sort: 'default',     // 'default' | 'price-asc' | 'price-desc'
+  showOutOfStock: false, // por defecto oculta agotados
+}
 const PAGE_SIZE = 50
 
-async function renderGrowPage(filter = 'all') {
+async function renderGrowPage(filter = 'all', opts = {}) {
   const app = document.getElementById('app');
 
-  // Reset offset al cambiar filtro
-  if (growPageState.filter !== filter) {
-    growPageState = { filter, offset: 0, products: [], total: 0, degraded: false }
+  // Si cambia filtro/sort/stock -> reset
+  const optsChanged =
+    (opts.sort !== undefined && opts.sort !== growPageState.sort) ||
+    (opts.showOutOfStock !== undefined && opts.showOutOfStock !== growPageState.showOutOfStock)
+  if (growPageState.filter !== filter || optsChanged) {
+    growPageState = {
+      filter,
+      offset: 0,
+      products: [],
+      total: 0,
+      degraded: false,
+      sort: opts.sort ?? growPageState.sort,
+      showOutOfStock: opts.showOutOfStock ?? growPageState.showOutOfStock,
+    }
   }
 
-  // Skeleton
+  // Skeletons en primer render
   if (growPageState.products.length === 0) {
     app.innerHTML = `
       <section class="hero-section" style="padding: 40px 20px; background: linear-gradient(135deg, var(--purple-dark) 0%, var(--green-dark) 100%);">
@@ -192,6 +211,9 @@ async function renderGrowPage(filter = 'all') {
           <p class="hero-subtitle">Cargando catalogo...</p>
         </div>
       </section>
+      <section class="products-section">
+        <div class="product-grid">${renderSkeletonCards(8)}</div>
+      </section>
     `;
   }
 
@@ -199,6 +221,8 @@ async function renderGrowPage(filter = 'all') {
     category: filter === 'all' ? null : filter,
     limit: PAGE_SIZE,
     offset: growPageState.offset,
+    onlyInStock: !growPageState.showOutOfStock,
+    sort: growPageState.sort,
   });
   growPageState.products = growPageState.products.concat(products);
   growPageState.total = total;
@@ -220,6 +244,22 @@ async function renderGrowPage(filter = 'all') {
           <button class="filter-btn ${filter === key ? 'active' : ''}" data-category="${key}">${label}</button>
         `).join('')}
       </div>
+
+      <div class="catalog-controls">
+        <label class="catalog-control">
+          <input type="checkbox" id="toggle-out-of-stock" ${growPageState.showOutOfStock ? 'checked' : ''} />
+          <span>Mostrar agotados</span>
+        </label>
+        <label class="catalog-control">
+          Ordenar:
+          <select id="sort-select">
+            <option value="default" ${growPageState.sort === 'default' ? 'selected' : ''}>Relevancia</option>
+            <option value="price-asc" ${growPageState.sort === 'price-asc' ? 'selected' : ''}>Precio: menor a mayor</option>
+            <option value="price-desc" ${growPageState.sort === 'price-desc' ? 'selected' : ''}>Precio: mayor a menor</option>
+          </select>
+        </label>
+      </div>
+
       <div class="product-grid fade-in">
         ${growPageState.products.map(p => renderGrowCard(p)).join('')}
       </div>
@@ -246,6 +286,32 @@ async function renderGrowPage(filter = 'all') {
       await renderGrowPage(filter);
     });
   }
+
+  const sortSelect = document.getElementById('sort-select');
+  if (sortSelect) {
+    sortSelect.addEventListener('change', () => {
+      renderGrowPage(filter, { sort: sortSelect.value });
+    });
+  }
+  const stockToggle = document.getElementById('toggle-out-of-stock');
+  if (stockToggle) {
+    stockToggle.addEventListener('change', () => {
+      renderGrowPage(filter, { showOutOfStock: stockToggle.checked });
+    });
+  }
+}
+
+function renderSkeletonCards(count) {
+  return Array.from({ length: count }).map(() => `
+    <div class="product-card product-card-skeleton" aria-hidden="true">
+      <div class="skeleton-img"></div>
+      <div class="skeleton-body">
+        <div class="skeleton-line skeleton-line-wide"></div>
+        <div class="skeleton-line skeleton-line-mid"></div>
+        <div class="skeleton-line skeleton-line-short"></div>
+      </div>
+    </div>
+  `).join('');
 }
 
 async function renderOffersPage() {
