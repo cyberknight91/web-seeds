@@ -493,6 +493,36 @@ img {
   box-shadow: 0 0 20px rgba(255, 45, 149, 0.1);
 }
 
+/* Banner de aviso "Actualizando catalogo" cuando NS no devuelve nombres reales */
+.degraded-banner {
+  background: linear-gradient(135deg, rgba(255, 193, 7, 0.12), rgba(255, 193, 7, 0.05));
+  border-top: 1px solid rgba(255, 193, 7, 0.4);
+  border-bottom: 1px solid rgba(255, 193, 7, 0.4);
+  padding: 18px 20px;
+}
+.degraded-banner-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  color: var(--text-secondary, #ddd);
+  font-size: 0.92rem;
+  line-height: 1.55;
+}
+.degraded-banner-inner p { margin: 0; }
+.degraded-banner-inner strong { color: #ffc107; }
+.degraded-banner-icon {
+  font-size: 1.4rem;
+  color: #ffc107;
+  animation: spin 4s linear infinite;
+  flex-shrink: 0;
+}
+@keyframes spin { to { transform: rotate(360deg); } }
+@media (max-width: 640px) {
+  .degraded-banner-inner { flex-direction: column; text-align: center; }
+}
+
 .marquee-text {
   display: inline-block;
   animation: marquee 20s linear infinite;

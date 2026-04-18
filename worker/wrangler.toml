@@ -1,0 +1,17 @@
+name = "groweldruida-ns-sync"
+main = "src/index.ts"
+compatibility_date = "2026-04-17"
+compatibility_flags = ["nodejs_compat"]
+account_id = "9a01e2fc876e41b50c200482cc474963"
+
+# Cron: cada 6 horas, a las 00, 06, 12, 18 UTC
+[triggers]
+crons = ["0 */6 * * *"]
+
+# Observability: logs en Cloudflare Dashboard
+[observability]
+enabled = true
+
+# Nota: [limits] (cpu_ms) solo en Paid plan. Free usa default 30s CPU time por invocacion
+# scheduled (cron) — suficiente para este sync. Si algun dia llega al limite,
+# upgrade a Workers Paid ($5/mes) permite configurar explicitamente.

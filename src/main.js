@@ -1,5 +1,14 @@
 import './style.css';
-import { seeds, growProducts, allProducts, seedCategories, growCategories } from './data/products.js';
+import {
+  growProducts,
+  allProducts,
+  growCategories,
+  loadProducts,
+  loadCategories,
+  degradedMode,
+  totalProductCount,
+} from './data/products.js';
+import { fetchProducts } from './supabase.js';
 import { cart, renderCart, showToast } from './cart.js';
 import { createSmokeParticles } from './effects.js';
 import { initAuth, getCurrentUser, getProfile } from './auth.js';
@@ -67,7 +76,6 @@ function navigateTo(page, filter = 'all') {
   // Render page
   switch (page) {
     case 'home': renderHomePage(); break;
-    case 'seeds': renderSeedsPage(filter); break;
     case 'grow': renderGrowPage(filter); break;
     case 'offers': renderOffersPage(); break;
     case 'about': renderAboutPage(); break;
@@ -85,8 +93,7 @@ function navigateTo(page, filter = 'all') {
 // ============================================
 function renderHomePage() {
   const app = document.getElementById('app');
-  const featuredSeeds = seeds.slice(0, 4);
-  const featuredGrow = growProducts.slice(0, 4);
+  const featuredGrow = growProducts.slice(0, 8);
 
   app.innerHTML = `
     <!-- HERO -->
@@ -94,16 +101,16 @@ function renderHomePage() {
       <div class="hero-content fade-in">
         <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" />
         <h2 class="hero-title">GROW EL DRUIDA</h2>
-        <p class="hero-subtitle">Tu Coffee Shop Online - Las mejores geneticas y el mejor equipo de cultivo</p>
+        <p class="hero-subtitle">Tu Grow Shop Online - Equipamiento profesional de cultivo al mejor precio</p>
         <div class="hero-badges">
-          <span class="hero-badge">+70 Variedades</span>
+          <span class="hero-badge">+${totalProductCount} productos</span>
           <span class="hero-badge">Envio Discreto</span>
-          <span class="hero-badge">Geneticas USA & EU</span>
-          <span class="hero-badge">Grow Shop Completo</span>
+          <span class="hero-badge">Stock Real</span>
+          <span class="hero-badge">Partner Natural Systems</span>
         </div>
         <div class="hero-cta">
-          <a href="#" class="btn btn-primary" data-page="seeds">Ver Semillas</a>
-          <a href="#" class="btn btn-secondary" data-page="grow">Grow Shop</a>
+          <a href="#" class="btn btn-primary" data-page="grow">Ver Catalogo</a>
+          <a href="#" class="btn btn-secondary" data-page="partners">Nuestros Partners</a>
         </div>
       </div>
     </section>
@@ -111,69 +118,19 @@ function renderHomePage() {
     <!-- MARQUEE -->
     <div class="marquee-banner">
       <span class="marquee-text">
-        ENVIO GRATIS a partir de 50EUR --- NUEVAS GENETICAS USA --- OFERTAS SEMANALES --- PACKS MIX DISPONIBLES --- GROW SHOP COMPLETO --- LED, FERTILIZANTES, SUSTRATOS y MAS ---
+        ENVIO GRATIS a partir de 50EUR --- OFERTAS SEMANALES --- GROW SHOP COMPLETO --- LED, FERTILIZANTES, SUSTRATOS, CONTROL DE CLIMA Y MAS ---
       </span>
     </div>
 
-    <!-- CATEGORIES -->
-    <section class="categories-section">
-      <h2 class="section-title">EXPLORA NUESTRO CATALOGO</h2>
-      <p class="section-subtitle">Semillas de coleccion y equipamiento profesional de cultivo</p>
-      <div class="category-grid">
-        <div class="category-card slide-up" data-page="seeds" data-filter="feminized">
-          <img src="https://images.unsplash.com/photo-1603909223429-69bb7101f420?w=600&h=300&fit=crop" alt="Feminizadas" class="category-card-img" />
-          <div class="category-card-body">
-            <h3>Semillas Feminizadas</h3>
-            <p>Las mejores geneticas feminizadas. 100% hembra garantizada.</p>
-            <span class="category-card-count">${seeds.filter(s => s.category === 'feminized').length} productos</span>
-          </div>
-        </div>
-        <div class="category-card slide-up" data-page="seeds" data-filter="auto">
-          <img src="https://images.unsplash.com/photo-1563291589-4e12fd737131?w=600&h=300&fit=crop" alt="Autos" class="category-card-img" />
-          <div class="category-card-body">
-            <h3>Autoflorecientes</h3>
-            <p>Rapidas y faciles. De semilla a cosecha en 60-75 dias.</p>
-            <span class="category-card-count">${seeds.filter(s => s.category === 'auto').length} productos</span>
-          </div>
-        </div>
-        <div class="category-card slide-up" data-page="grow" data-filter="lighting">
-          <img src="https://images.unsplash.com/photo-1558618666-fcd25c85f82e?w=600&h=300&fit=crop" alt="Iluminacion" class="category-card-img" />
-          <div class="category-card-body">
-            <h3>Iluminacion LED</h3>
-            <p>Paneles LED de ultima generacion. Eficiencia maxima.</p>
-            <span class="category-card-count">${growProducts.filter(p => p.category === 'lighting').length} productos</span>
-          </div>
-        </div>
-        <div class="category-card slide-up" data-page="grow" data-filter="fertilizers">
-          <img src="https://images.unsplash.com/photo-1585314062604-1a357de8b000?w=600&h=300&fit=crop" alt="Fertilizantes" class="category-card-img" />
-          <div class="category-card-body">
-            <h3>Fertilizantes</h3>
-            <p>Nutricion completa para todo el ciclo de cultivo.</p>
-            <span class="category-card-count">${growProducts.filter(p => p.category === 'fertilizers').length} productos</span>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- FEATURED SEEDS -->
-    <section class="products-section">
-      <h2 class="section-title">SEMILLAS DESTACADAS</h2>
-      <p class="section-subtitle">Las favoritas de nuestros clientes</p>
-      <div class="product-grid">
-        ${featuredSeeds.map(p => renderSeedCard(p)).join('')}
-      </div>
-      <div style="text-align: center; margin-top: 32px;">
-        <a href="#" class="btn btn-primary" data-page="seeds">Ver todas las semillas</a>
-      </div>
-    </section>
+    ${degradedMode ? renderDegradedBanner() : ''}
 
     <!-- PARTNERS TEASER -->
     <section class="partners-section" style="padding: 64px 20px;">
       <div class="partners-wrap">
         <div class="partners-head">
           <span class="eyebrow">Partner oficial</span>
-          <h2>Distribuidores de Exotic Seed</h2>
-          <p>Colaboramos directamente con uno de los bancos de semillas más reconocidos de Europa. Genética auténtica, stock real, precios de partner.</p>
+          <h2>Distribuidores de Natural Systems</h2>
+          <p>Colaboramos directamente con Natural Systems, uno de los distribuidores de referencia en horticultura tecnica en Espana. Stock en tiempo real, catalogo completo, precios de partner.</p>
         </div>
         <div style="text-align:center;">
           <a href="#" class="btn btn-primary" data-page="partners">Ver nuestros partners →</a>
@@ -183,13 +140,13 @@ function renderHomePage() {
 
     <!-- FEATURED GROW -->
     <section class="products-section">
-      <h2 class="section-title">GROW SHOP - LO MAS VENDIDO</h2>
-      <p class="section-subtitle">Equipamiento profesional para tu cultivo</p>
+      <h2 class="section-title">DESTACADOS</h2>
+      <p class="section-subtitle">${totalProductCount} productos en nuestro catalogo</p>
       <div class="product-grid">
         ${featuredGrow.map(p => renderGrowCard(p)).join('')}
       </div>
       <div style="text-align: center; margin-top: 32px;">
-        <a href="#" class="btn btn-secondary" data-page="grow">Ver todo el Grow Shop</a>
+        <a href="#" class="btn btn-primary" data-page="grow">Ver todo el Grow Shop (${totalProductCount})</a>
       </div>
     </section>
   `;
@@ -198,74 +155,117 @@ function renderHomePage() {
   bindNavigationEvents();
 }
 
-function renderSeedsPage(filter = 'all') {
-  const app = document.getElementById('app');
-  const filtered = filter === 'all' ? seeds : seeds.filter(s => s.category === filter);
-
-  app.innerHTML = `
-    <section class="hero-section" style="padding: 40px 20px;">
-      <div class="hero-content">
-        <h2 class="hero-title" style="font-size: 3rem;">SEMILLAS DE COLECCION</h2>
-        <p class="hero-subtitle">Geneticas premium de los mejores breeders</p>
+function renderDegradedBanner() {
+  return `
+    <div class="degraded-banner" role="status" aria-live="polite">
+      <div class="degraded-banner-inner">
+        <span class="degraded-banner-icon" aria-hidden="true">&#9881;</span>
+        <p>
+          <strong>Actualizando catalogo.</strong>
+          Nombres definitivos, descripciones e imagenes de producto estaran
+          disponibles en breve. Precios y stock son reales y fiables.
+        </p>
       </div>
-    </section>
-    <section class="products-section">
-      <div class="filter-bar">
-        ${Object.entries(seedCategories).map(([key, label]) => `
-          <button class="filter-btn ${filter === key ? 'active' : ''}" data-category="${key}" data-type="seeds">${label}</button>
-        `).join('')}
-      </div>
-      <div class="product-grid fade-in">
-        ${filtered.map(p => renderSeedCard(p)).join('')}
-      </div>
-      ${filtered.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#127793;</div><p>No hay productos en esta categoria</p></div>' : ''}
-    </section>
+    </div>
   `;
-
-  bindProductEvents();
-  bindFilterEvents();
 }
 
-function renderGrowPage(filter = 'all') {
+// Estado de paginacion persistente entre renders
+let growPageState = { filter: 'all', offset: 0, products: [], total: 0, degraded: false }
+const PAGE_SIZE = 50
+
+async function renderGrowPage(filter = 'all') {
   const app = document.getElementById('app');
-  const filtered = filter === 'all' ? growProducts : growProducts.filter(p => p.category === filter);
+
+  // Reset offset al cambiar filtro
+  if (growPageState.filter !== filter) {
+    growPageState = { filter, offset: 0, products: [], total: 0, degraded: false }
+  }
+
+  // Skeleton
+  if (growPageState.products.length === 0) {
+    app.innerHTML = `
+      <section class="hero-section" style="padding: 40px 20px; background: linear-gradient(135deg, var(--purple-dark) 0%, var(--green-dark) 100%);">
+        <div class="hero-content">
+          <h2 class="hero-title" style="font-size: 3rem;">GROW SHOP</h2>
+          <p class="hero-subtitle">Cargando catalogo...</p>
+        </div>
+      </section>
+    `;
+  }
+
+  const { products, total, degraded } = await fetchProducts({
+    category: filter === 'all' ? null : filter,
+    limit: PAGE_SIZE,
+    offset: growPageState.offset,
+  });
+  growPageState.products = growPageState.products.concat(products);
+  growPageState.total = total;
+  growPageState.degraded = degraded;
 
   app.innerHTML = `
     <section class="hero-section" style="padding: 40px 20px; background: linear-gradient(135deg, var(--purple-dark) 0%, var(--green-dark) 100%);">
       <div class="hero-content">
         <h2 class="hero-title" style="font-size: 3rem;">GROW SHOP</h2>
-        <p class="hero-subtitle">Todo lo que necesitas para tu cultivo interior y exterior</p>
+        <p class="hero-subtitle">${total} productos · Todo lo que necesitas para tu cultivo</p>
       </div>
     </section>
+
+    ${degraded ? renderDegradedBanner() : ''}
+
     <section class="products-section">
       <div class="filter-bar">
         ${Object.entries(growCategories).map(([key, label]) => `
-          <button class="filter-btn ${filter === key ? 'active' : ''}" data-category="${key}" data-type="grow">${label}</button>
+          <button class="filter-btn ${filter === key ? 'active' : ''}" data-category="${key}">${label}</button>
         `).join('')}
       </div>
       <div class="product-grid fade-in">
-        ${filtered.map(p => renderGrowCard(p)).join('')}
+        ${growPageState.products.map(p => renderGrowCard(p)).join('')}
       </div>
-      ${filtered.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#128161;</div><p>No hay productos en esta categoria</p></div>' : ''}
+      ${growPageState.products.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#128161;</div><p>No hay productos en esta categoria</p></div>' : ''}
+      ${growPageState.products.length < total ? `
+        <div style="text-align:center; margin-top:40px;">
+          <button type="button" class="btn btn-secondary" id="load-more-btn">
+            Cargar mas (${growPageState.products.length} de ${total})
+          </button>
+        </div>
+      ` : ''}
     </section>
   `;
 
   bindProductEvents();
   bindFilterEvents();
+
+  const loadMoreBtn = document.getElementById('load-more-btn');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', async () => {
+      loadMoreBtn.disabled = true;
+      loadMoreBtn.textContent = 'Cargando...';
+      growPageState.offset += PAGE_SIZE;
+      await renderGrowPage(filter);
+    });
+  }
 }
 
-function renderOffersPage() {
+async function renderOffersPage() {
   const app = document.getElementById('app');
-  const offers = allProducts.filter(p => p.offer);
+  app.innerHTML = `
+    <section class="offers-hero">
+      <h2>OFERTAS Y PROMOCIONES</h2>
+      <p>Cargando...</p>
+    </section>
+  `;
+
+  const { products: offers, total } = await fetchProducts({ offersOnly: true, limit: 100 });
 
   app.innerHTML = `
     <section class="offers-hero">
       <h2>OFERTAS Y PROMOCIONES</h2>
-      <p>Los mejores precios en semillas y equipamiento</p>
+      <p>${total} ofertas disponibles</p>
     </section>
     <section class="products-section">
       <div class="product-grid fade-in">
-        ${offers.map(p => p.type === 'seed' ? renderSeedCard(p) : renderGrowCard(p)).join('')}
+        ${offers.map(p => renderGrowCard(p)).join('')}
       </div>
       ${offers.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#128293;</div><p>No hay ofertas disponibles ahora mismo</p></div>' : ''}
     </section>
@@ -280,41 +280,41 @@ function renderPartnersPage() {
     <section class="hero-section" style="padding: 60px 20px;">
       <div class="hero-content fade-in">
         <h2 class="hero-title">NUESTROS PARTNERS</h2>
-        <p class="hero-subtitle">Trabajamos con los mejores bancos de semillas y distribuidores de equipamiento profesional. Colaboraciones reales, genética garantizada, precios de partner.</p>
+        <p class="hero-subtitle">Trabajamos con los mejores distribuidores de equipamiento profesional de cultivo. Colaboraciones reales, stock garantizado, precios de partner.</p>
       </div>
     </section>
 
     <section class="partners-section">
       <div class="partners-wrap">
         <div class="partners-head">
-          <span class="eyebrow">Partner oficial · Genética</span>
-          <h2>Exotic Seed — nuestro banco de referencia</h2>
-          <p>Distribuidor oficial. Llevamos años trabajando con Exotic Seed porque sus genéticas hablan por sí solas: cepas estables, fenotipos consistentes y resultados que se notan en la cosecha.</p>
+          <span class="eyebrow">Partner oficial · Equipamiento</span>
+          <h2>Natural Systems — nuestro distribuidor de referencia</h2>
+          <p>Distribuidor oficial. Llevamos años trabajando con Natural Systems porque su catálogo y servicio hablan por sí solos: stock real, marcas premium y resultados que se notan en el cultivo.</p>
         </div>
 
         <article class="partner-card">
           <div class="partner-card-media">
-            <div class="partner-mark">EXOTIC<br/>SEED</div>
+            <div class="partner-mark">NATURAL<br/>SYSTEMS</div>
           </div>
           <div class="partner-card-body">
-            <span class="partner-kicker">Banco de semillas · España</span>
-            <h3>Genética de élite, catálogo completo</h3>
+            <span class="partner-kicker">Distribuidor horticultura · España</span>
+            <h3>Equipamiento profesional, catálogo completo</h3>
             <p>
-              Exotic Seed es uno de los bancos referentes en Europa, con más de una década
-              trabajando genéticas exclusivas. Toda su colección de feminizadas,
-              autoflorecientes, regulares y CBD está disponible a través de nosotros —
-              con la misma autenticidad y garantía que comprando directamente en su web.
+              Natural Systems es uno de los distribuidores referentes en España en horticultura técnica,
+              con certificaciones ISO 9001, 14001 y 45001. Todo su catálogo de iluminación,
+              fertilizantes, sustratos, control de clima, cultivo y medición está disponible a través
+              de nosotros — con la misma garantía y stock en tiempo real.
             </p>
             <div class="partner-feats">
-              <span>+70 variedades</span>
-              <span>Genética USA & EU</span>
-              <span>Stock garantizado</span>
+              <span>Stock sincronizado</span>
+              <span>Marcas premium</span>
+              <span>Certificaciones ISO</span>
               <span>Envío discreto</span>
               <span>Precios competitivos</span>
             </div>
             <div class="partner-cta-row">
-              <a href="https://www.exoticseed.eu/" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visitar Exotic Seed →</a>
-              <a href="#" class="btn btn-secondary" data-page="seeds">Ver catálogo aquí</a>
+              <a href="https://naturalsystems.es/" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visitar Natural Systems →</a>
+              <a href="#" class="btn btn-secondary" data-page="grow">Ver catálogo aquí</a>
             </div>
           </div>
         </article>
@@ -338,34 +338,34 @@ function renderAboutPage() {
     <section class="hero-section" style="padding: 40px 20px; background: linear-gradient(135deg, var(--brown-dark), var(--green-dark));">
       <div class="hero-content">
         <h2 class="hero-title" style="font-size: 3rem;">SOBRE NOSOTROS</h2>
-        <p class="hero-subtitle">Pasion por la genetica desde el corazon de Amsterdam</p>
+        <p class="hero-subtitle">Grow shop profesional con equipamiento de referencia</p>
       </div>
     </section>
     <section class="about-section">
       <div class="about-content">
         <div class="about-text">
-          <p><strong>Grow El Druida</strong> nace de la pasion por las mejores geneticas cannabicas y la cultura del coffee shop de Amsterdam.</p>
-          <p>Combinamos semillas de coleccion de los mejores breeders europeos y americanos con un grow shop completo donde encontraras todo el equipamiento profesional que necesitas.</p>
-          <p>Trabajamos con marcas reconocidas como <strong>Exotic Seed</strong> para nuestras geneticas y <strong>Natural Systems</strong> para el equipamiento de cultivo, garantizando la maxima calidad en cada producto.</p>
+          <p><strong>Grow El Druida</strong> nace de la pasion por el cultivo profesional y el equipamiento de alta gama para horticultura tecnica.</p>
+          <p>Somos un grow shop completo donde encontraras todo el equipamiento profesional que necesitas: iluminacion LED, fertilizantes, sustratos, control de clima, sistemas de cultivo y herramientas de medicion.</p>
+          <p>Trabajamos directamente con <strong>Natural Systems</strong> como distribuidor oficial, garantizando la maxima calidad y stock en tiempo real en cada producto del catalogo.</p>
           <p>Nuestro equipo cuenta con mas de <strong>20 anos de experiencia</strong> en el sector, asesorandote en cada paso de tu proyecto de cultivo.</p>
         </div>
         <img src="/images/logo.jpg" alt="Grow El Druida" class="about-img" />
       </div>
       <div class="about-features">
         <div class="about-feature">
-          <div class="about-feature-icon">&#127793;</div>
-          <h3>+70 Variedades</h3>
-          <p>Feminizadas, autos, regulares y CBD de los mejores criadores</p>
+          <div class="about-feature-icon">&#128161;</div>
+          <h3>Grow Shop Pro</h3>
+          <p>Iluminacion, fertilizantes, sustratos y control clima</p>
         </div>
         <div class="about-feature">
           <div class="about-feature-icon">&#128230;</div>
           <h3>Envio Discreto</h3>
-          <p>Packaging anonimo y envio rapido a toda Europa</p>
+          <p>Packaging anonimo y envio rapido a toda Espana</p>
         </div>
         <div class="about-feature">
-          <div class="about-feature-icon">&#128161;</div>
-          <h3>Grow Shop Pro</h3>
-          <p>Iluminacion, fertilizantes, sustratos y control clima</p>
+          <div class="about-feature-icon">&#127807;</div>
+          <h3>Partner Oficial</h3>
+          <p>Distribuidor autorizado de Natural Systems</p>
         </div>
         <div class="about-feature">
           <div class="about-feature-icon">&#9989;</div>
@@ -571,22 +571,21 @@ async function renderProfilePage() {
   });
 }
 
-function renderSearchResults(query) {
+async function renderSearchResults(query) {
   const app = document.getElementById('app');
-  const q = query.toLowerCase();
-  const results = allProducts.filter(p =>
-    p.name.toLowerCase().includes(q) ||
-    (p.genetics && p.genetics.toLowerCase().includes(q)) ||
-    p.description.toLowerCase().includes(q) ||
-    (p.brand && p.brand.toLowerCase().includes(q)) ||
-    p.category.toLowerCase().includes(q)
-  );
+  app.innerHTML = `
+    <section class="search-results">
+      <h2>Buscando "${query}"...</h2>
+    </section>
+  `;
+
+  const { products: results, total } = await fetchProducts({ search: query, limit: 100 });
 
   app.innerHTML = `
     <section class="search-results">
-      <h2>Resultados para "${query}" (${results.length})</h2>
+      <h2>Resultados para "${query}" (${total})</h2>
       <div class="product-grid fade-in">
-        ${results.map(p => p.type === 'seed' ? renderSeedCard(p) : renderGrowCard(p)).join('')}
+        ${results.map(p => renderGrowCard(p)).join('')}
       </div>
       ${results.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#128269;</div><p>No se encontraron productos para tu busqueda</p></div>' : ''}
     </section>
@@ -601,65 +600,35 @@ function renderSearchResults(query) {
 // ============================================
 // RENDER PRODUCT CARDS
 // ============================================
-function renderSeedCard(product) {
-  const priceEntries = Object.entries(product.prices);
-  const firstPrice = priceEntries[0];
-  const hasMultiplePrices = priceEntries.length > 1;
-
-  return `
-    <div class="product-card" data-id="${product.id}">
-      ${product.badge ? `<span class="product-card-badge badge-${product.badge.toLowerCase()}">${product.badge}</span>` : ''}
-      ${product.offer ? `<span class="product-card-offer">OFERTA</span>` : ''}
-      <div class="product-card-img-wrap">
-        <img src="${product.image}" alt="${product.name}" class="product-card-img" loading="lazy" />
-      </div>
-      <div class="product-card-body">
-        <h3 class="product-card-name">${product.name}</h3>
-        <p class="product-card-genetics">${product.genetics}</p>
-        <div class="product-card-stats">
-          <span class="stat-tag thc">THC: ${product.thc}</span>
-          ${product.cbd ? `<span class="stat-tag cbd-tag">CBD: ${product.cbd}</span>` : ''}
-          <span class="stat-tag flowering">${product.flowering}</span>
-        </div>
-        <p class="product-card-desc">${product.description}</p>
-        <div class="product-card-price">
-          <div>
-            <span class="price-current">${firstPrice[1].toFixed(2)}&euro;</span>
-            ${product.offer && product.oldPrice ? `<span class="price-old">${product.oldPrice.toFixed(2)}&euro;</span>` : ''}
-          </div>
-          ${hasMultiplePrices ? `
-            <select class="price-select" data-product-id="${product.id}">
-              ${priceEntries.map(([qty, price]) => `<option value="${qty}">${qty} sem. - ${price.toFixed(2)}&euro;</option>`).join('')}
-            </select>
-          ` : `
-            <span class="stat-tag">${firstPrice[0]} semillas</span>
-          `}
-        </div>
-        <button class="add-to-cart-btn" data-id="${product.id}" data-type="seed">Anadir al carrito</button>
-      </div>
-    </div>
-  `;
-}
-
 function renderGrowCard(product) {
+  const safeName = (product.name || '').replace(/"/g, '&quot;');
+  const disabled = !product.inStock ? 'disabled' : '';
+  const outOfStockLabel = !product.inStock ? '<span class="product-card-offer" style="background:#555;">AGOTADO</span>' : '';
   return `
     <div class="product-card" data-id="${product.id}">
       ${product.badge ? `<span class="product-card-badge badge-${product.badge.toLowerCase()}">${product.badge}</span>` : ''}
-      ${product.offer ? `<span class="product-card-offer">OFERTA</span>` : ''}
+      ${product.offer ? `<span class="product-card-offer">OFERTA</span>` : outOfStockLabel}
       <div class="product-card-img-wrap">
-        <img src="${product.image}" alt="${product.name}" class="product-card-img" loading="lazy" />
+        <img src="${product.image}" alt="${safeName}" class="product-card-img" loading="lazy" />
       </div>
       <div class="product-card-body">
         <h3 class="product-card-name">${product.name}</h3>
         ${product.brand ? `<p class="product-card-genetics">${product.brand}</p>` : ''}
-        <p class="product-card-desc">${product.description}</p>
+        <p class="product-card-desc">${product.description || ''}</p>
         <div class="product-card-price">
           <div>
             <span class="price-current">${product.price.toFixed(2)}&euro;</span>
             ${product.offer && product.oldPrice ? `<span class="price-old">${product.oldPrice.toFixed(2)}&euro;</span>` : ''}
           </div>
         </div>
-        <button class="add-to-cart-btn" data-id="${product.id}" data-type="grow">Anadir al carrito</button>
+        <button class="add-to-cart-btn"
+                data-id="${product.id}"
+                data-name="${safeName}"
+                data-price="${product.price}"
+                data-image="${product.image}"
+                ${disabled}>
+          ${product.inStock ? 'Anadir al carrito' : 'Agotado'}
+        </button>
       </div>
     </div>
   `;
@@ -671,35 +640,22 @@ function renderGrowCard(product) {
 function bindProductEvents() {
   document.querySelectorAll('.add-to-cart-btn').forEach(btn => {
     btn.addEventListener('click', () => {
+      if (btn.disabled) return;
       const id = btn.dataset.id;
-      const type = btn.dataset.type;
-      const product = type === 'seed'
-        ? seeds.find(s => s.id === id)
-        : growProducts.find(p => p.id === id);
+      const name = btn.dataset.name || id;
+      const price = parseFloat(btn.dataset.price) || 0;
+      const image = btn.dataset.image || '/images/logo.jpg';
 
-      if (product) {
-        let price, label;
-        if (type === 'seed') {
-          const select = document.querySelector(`select[data-product-id="${id}"]`);
-          const qty = select ? select.value : Object.keys(product.prices)[0];
-          price = product.prices[qty];
-          label = `${qty} sem.`;
-        } else {
-          price = product.price;
-          label = '1 ud.';
-        }
+      cart.addItem({
+        id,
+        name,
+        price,
+        image,
+        label: '1 ud.',
+      });
 
-        cart.addItem({
-          id: product.id,
-          name: product.name,
-          price: price,
-          image: product.image,
-          label: label
-        });
-
-        renderCart();
-        showToast(`${product.name} anadido al carrito`);
-      }
+      renderCart();
+      showToast(`${name} anadido al carrito`);
     });
   });
 }
@@ -717,12 +673,7 @@ function bindFilterEvents() {
   document.querySelectorAll('.filter-btn').forEach(btn => {
     btn.addEventListener('click', () => {
       const category = btn.dataset.category;
-      const type = btn.dataset.type;
-      if (type === 'seeds') {
-        renderSeedsPage(category);
-      } else {
-        renderGrowPage(category);
-      }
+      renderGrowPage(category);
     });
   });
 }
@@ -939,9 +890,50 @@ async function init() {
   initCart();
   initCheckout();
   createSmokeParticles();
-  await initAuth();
   window.__navigateTo = navigateTo;
-  renderHomePage();
+
+  // Carga inicial: primeros 8 productos para la home + categorias + auth en paralelo.
+  // Si Supabase tarda, se muestra loading state; si falla, error state.
+  renderLoadingPage();
+  try {
+    await Promise.all([
+      loadProducts({ limit: 8 }),
+      loadCategories(),
+      initAuth(),
+    ]);
+    renderHomePage();
+  } catch (err) {
+    console.error('[init] error cargando datos:', err);
+    renderErrorPage(err);
+  }
+}
+
+function renderLoadingPage() {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <section class="hero-section" style="padding: 120px 20px; text-align:center;">
+      <div class="hero-content">
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" />
+        <h2 class="hero-title" style="font-size: 2rem;">Cargando catalogo...</h2>
+        <p class="hero-subtitle">Conectando con Natural Systems</p>
+      </div>
+    </section>
+  `;
+}
+
+function renderErrorPage(err) {
+  const app = document.getElementById('app');
+  app.innerHTML = `
+    <section class="hero-section" style="padding: 80px 20px; text-align:center;">
+      <div class="hero-content">
+        <h2 class="hero-title" style="font-size: 2rem;">Ups, algo ha fallado</h2>
+        <p class="hero-subtitle">${err?.message || 'No pudimos cargar el catalogo'}</p>
+        <div class="hero-cta" style="justify-content:center;">
+          <button type="button" class="btn btn-primary" onclick="window.location.reload()">Reintentar</button>
+        </div>
+      </div>
+    </section>
+  `;
 }
 
 document.addEventListener('DOMContentLoaded', init);

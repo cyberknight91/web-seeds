@@ -1,0 +1,14 @@
+# Copia este archivo a `.dev.vars` y rellena los valores reales.
+# `.dev.vars` esta gitignored para no exponer secretos.
+# En produccion, usa `wrangler secret put <NAME>` para cada uno.
+
+# API key de Natural Systems (portal /micuenta/developers/integraciones)
+NS_API_KEY=REPLACE_ME
+
+# Supabase: URL publica + service_role key (permite bypass RLS)
+SUPABASE_URL=https://fbjgutmaulopjevoiqsb.supabase.co
+SUPABASE_SERVICE_KEY=REPLACE_ME
+
+# Secret compartido para invocar el endpoint /sync manualmente
+# Genera uno random (ej. `openssl rand -hex 32`) y guardalo bien.
+TRIGGER_SECRET=REPLACE_ME
