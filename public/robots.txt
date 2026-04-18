@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /checkout
+Disallow: /profile
+Disallow: /orders
+Disallow: /auth
+
+Sitemap: https://groweldruida.es/sitemap.xml

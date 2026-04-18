@@ -13,6 +13,7 @@ import { cart, renderCart, showToast } from './cart.js';
 import { createSmokeParticles } from './effects.js';
 import { initAuth, getCurrentUser, getProfile } from './auth.js';
 import { saveOrder, getMyOrders } from './orders.js';
+import { initCookieBanner } from './cookies.js';
 
 // ============================================
 // APP STATE
@@ -890,6 +891,7 @@ async function init() {
   initCart();
   initCheckout();
   createSmokeParticles();
+  initCookieBanner();
   window.__navigateTo = navigateTo;
 
   // Carga inicial: primeros 8 productos para la home + categorias + auth en paralelo.
