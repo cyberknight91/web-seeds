@@ -5,32 +5,34 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 
   <!-- Primary SEO -->
-  <title>Grow El Druida — Grow Shop Profesional | Iluminación, Fertilizantes, Sustratos</title>
-  <meta name="description" content="Grow shop online con +3000 productos de cultivo profesional: iluminación LED, fertilizantes, sustratos, control de clima y mucho más. Partner oficial de Natural Systems. Envío discreto a toda España." />
-  <meta name="keywords" content="grow shop, cultivo interior, iluminacion LED cultivo, fertilizantes cannabis, sustratos cultivo, control clima, Natural Systems, grow el druida" />
+  <title>Grow El Druida — Grow Shop Profesional | Precios de Partner</title>
+  <meta name="description" content="+3000 productos de cultivo profesional a precios de partner: iluminación LED, fertilizantes, sustratos, control de clima y medición. Distribuidor directo de Natural Systems. Envío discreto 24-48h a toda España." />
+  <meta name="keywords" content="grow shop, cultivo interior, iluminacion LED cultivo, fertilizantes, sustratos cultivo, control clima, Natural Systems, grow el druida, grow shop online Espana" />
   <meta name="author" content="Grow El Druida" />
-  <meta name="robots" content="index, follow" />
+  <meta name="robots" content="index, follow, max-image-preview:large" />
   <link rel="canonical" href="https://groweldruida.es/" />
 
   <!-- Open Graph (Facebook, WhatsApp, LinkedIn) -->
   <meta property="og:type" content="website" />
   <meta property="og:site_name" content="Grow El Druida" />
-  <meta property="og:title" content="Grow El Druida — Grow Shop Profesional" />
-  <meta property="og:description" content="+3000 productos de cultivo profesional. Iluminación LED, fertilizantes, sustratos y control de clima. Partner oficial Natural Systems." />
+  <meta property="og:title" content="Grow El Druida — Precios de partner, stock real, envío 24-48h" />
+  <meta property="og:description" content="+3000 productos de cultivo profesional. Distribuidor directo de Natural Systems. Stock en directo y envío discreto a toda España." />
   <meta property="og:url" content="https://groweldruida.es/" />
   <meta property="og:image" content="https://groweldruida.es/images/logo.jpg" />
-  <meta property="og:image:alt" content="Grow El Druida — Logo" />
+  <meta property="og:image:alt" content="Grow El Druida — Grow Shop Profesional" />
   <meta property="og:locale" content="es_ES" />
 
   <!-- Twitter Card -->
   <meta name="twitter:card" content="summary_large_image" />
   <meta name="twitter:title" content="Grow El Druida — Grow Shop Profesional" />
-  <meta name="twitter:description" content="+3000 productos de cultivo profesional. Iluminación LED, fertilizantes, sustratos y control de clima." />
+  <meta name="twitter:description" content="+3000 productos de cultivo profesional. Distribuidor directo de Natural Systems. Envío discreto 24-48h." />
   <meta name="twitter:image" content="https://groweldruida.es/images/logo.jpg" />
 
   <!-- Theme + mobile app -->
-  <meta name="theme-color" content="#00ff88" />
+  <meta name="theme-color" content="#00ff88" media="(prefers-color-scheme: dark)" />
+  <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: light)" />
   <meta name="format-detection" content="telephone=no" />
+  <meta name="color-scheme" content="dark" />
 
   <!-- Favicons -->
   <link rel="icon" type="image/jpeg" href="/images/logo.jpg" />
@@ -55,11 +57,25 @@
   }
   </script>
 
-  <!-- Fonts -->
+  <!-- Performance: preconnect a los dominios criticos (reduce TTFB ~100ms) -->
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link rel="preconnect" href="https://fbjgutmaulopjevoiqsb.supabase.co" crossorigin />
+  <link rel="dns-prefetch" href="https://api.naturalsystems.es" />
+
+  <!-- Fonts (display=swap evita FOIT) -->
   <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Inter:wght@400;500;600;700&family=Syncopate:wght@400;700&display=swap" rel="stylesheet" />
   <link rel="stylesheet" href="/src/style.css" />
+
+  <!-- Plausible analytics (privacy-first, sin cookies, RGPD-compliant). -->
+  <!-- Activar descomentando la linea cuando tengas cuenta: https://plausible.io -->
+  <!-- <script defer data-domain="groweldruida.es" src="https://plausible.io/js/script.js"></script> -->
+
+  <!-- Alternativa self-hosted gratis: Umami. -->
+  <!-- <script defer src="https://TU-INSTANCIA-UMAMI/script.js" data-website-id="TU-WEBSITE-ID"></script> -->
+
+  <!-- Alternativa Cloudflare Web Analytics (gratis, sin instalar nada) -->
+  <!-- <script defer src='https://static.cloudflareinsights.com/beacon.min.js' data-cf-beacon='{"token": "TU-TOKEN"}'></script> -->
 </head>
 <body>
   <!-- Floating smoke particles -->
@@ -69,7 +85,7 @@
   <header class="header">
     <div class="header-inner">
       <a href="#" class="logo-link" data-page="home">
-        <img src="/images/logo.jpg" alt="Grow El Druida" class="logo-img" />
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="logo-img" width="56" height="56" fetchpriority="high" />
         <div class="logo-text">
           <h1>Grow El Druida</h1>
           <span class="logo-subtitle">GROW SHOP PROFESIONAL</span>
@@ -130,7 +146,7 @@
   <footer class="footer">
     <div class="footer-inner">
       <div class="footer-col">
-        <img src="/images/logo.jpg" alt="Logo" class="footer-logo" />
+        <img src="/images/logo.jpg" alt="Logo" class="footer-logo" width="120" height="120" loading="lazy" />
         <p>Grow shop profesional con el mejor equipamiento de cultivo. Partner oficial de Natural Systems.</p>
       </div>
       <div class="footer-col">

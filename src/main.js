@@ -74,6 +74,12 @@ function navigateTo(page, filter = 'all', extra = null) {
   // Close mobile nav
   document.getElementById('mobile-nav').classList.remove('open');
 
+  // Restaura SEO por defecto al salir de producto. renderProductDetail se encarga de
+  // sobrescribirlo de nuevo con los datos especificos cuando se entra.
+  if (page !== 'product' && typeof resetSEOToDefault === 'function') {
+    resetSEOToDefault();
+  }
+
   // Render page
   switch (page) {
     case 'home': renderHomePage(); break;
@@ -101,18 +107,18 @@ function renderHomePage() {
     <!-- HERO -->
     <section class="hero-section">
       <div class="hero-content fade-in">
-        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" />
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" fetchpriority="high" />
         <h2 class="hero-title">GROW EL DRUIDA</h2>
-        <p class="hero-subtitle">Tu Grow Shop Online - Equipamiento profesional de cultivo al mejor precio</p>
+        <p class="hero-subtitle">Todo lo que tu cultivo necesita. <strong>Precios de partner</strong>, stock real y envío discreto en 24-48h.</p>
         <div class="hero-badges">
           <span class="hero-badge">+${totalProductCount} productos</span>
-          <span class="hero-badge">Envio Discreto</span>
-          <span class="hero-badge">Stock Real</span>
+          <span class="hero-badge">Envío 24-48h</span>
+          <span class="hero-badge">Stock en directo</span>
           <span class="hero-badge">Partner Natural Systems</span>
         </div>
         <div class="hero-cta">
-          <a href="#" class="btn btn-primary" data-page="grow">Ver Catalogo</a>
-          <a href="#" class="btn btn-secondary" data-page="partners">Nuestros Partners</a>
+          <a href="#" class="btn btn-primary" data-page="grow">Entrar al catálogo →</a>
+          <a href="#" class="btn btn-secondary" data-page="partners">Ver partners</a>
         </div>
       </div>
     </section>
@@ -131,8 +137,8 @@ function renderHomePage() {
       <div class="partners-wrap">
         <div class="partners-head">
           <span class="eyebrow">Partner oficial</span>
-          <h2>Distribuidores de Natural Systems</h2>
-          <p>Colaboramos directamente con Natural Systems, uno de los distribuidores de referencia en horticultura tecnica en Espana. Stock en tiempo real, catalogo completo, precios de partner.</p>
+          <h2>Distribuidores directos de Natural Systems</h2>
+          <p>Trabajamos en exclusiva con uno de los mayores distribuidores de horticultura técnica de España. Eso se traduce en tres cosas: <strong>stock real minuto a minuto</strong>, catálogo completo de +3000 referencias y <strong>precios de partner</strong> que no consiguen el 95% de las tiendas online.</p>
         </div>
         <div style="text-align:center;">
           <a href="#" class="btn btn-primary" data-page="partners">Ver nuestros partners →</a>
@@ -798,8 +804,58 @@ function initCart() {
 // >>> PON TU NUMERO DE WHATSAPP AQUI (con codigo de pais, sin + ni espacios) <<<
 const WHATSAPP_NUMBER = '34600000000';
 const SHOP_EMAIL = 'info@groweldruida.es';
+// URL del Worker de Cloudflare que envia emails transaccionales.
+// Dejalo como '' si todavia no tienes el Worker desplegado con Resend.
+const WORKER_URL = import.meta.env.VITE_WORKER_URL || '';
 
 let checkoutData = {};
+
+/**
+ * Flujo comun tras aceptar el pedido en checkout:
+ *  1. Guarda el pedido en Supabase (orders + order_items)
+ *  2. Si hay WORKER_URL, llama a /send-order-email para enviar confirmacion
+ *     al cliente + notificacion interna a Mario
+ *  3. Limpia el carrito
+ *
+ * Los fallos de email no rompen el flujo (no bloqueamos al cliente por un SMTP down).
+ * Los fallos de Supabase tampoco rompen (el pedido siempre puede completarse por
+ * WhatsApp/email manual, que es el canal primario).
+ */
+async function completeOrder() {
+  let savedOrder = null;
+  try {
+    savedOrder = await saveOrder(checkoutData, cart.items, cart.getTotal());
+  } catch (err) {
+    console.error('[checkout] Error guardando pedido en Supabase:', err);
+  }
+
+  // Envio de emails transaccionales (best-effort, no bloquea)
+  if (WORKER_URL && savedOrder?.id) {
+    try {
+      await fetch(`${WORKER_URL}/send-order-email`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          orderId: savedOrder.id,
+          customer: checkoutData,
+          items: cart.items.map(it => ({
+            item_code: it.id,
+            name: it.name,
+            qty: it.quantity,
+            price: it.price,
+          })),
+          total: cart.getTotal(),
+          createdAt: new Date().toISOString(),
+        }),
+      }).catch(err => console.warn('[checkout] Error enviando emails:', err));
+    } catch (err) {
+      console.warn('[checkout] Error enviando emails:', err);
+    }
+  }
+
+  cart.clear();
+  renderCart();
+}
 
 async function openCheckout() {
   document.getElementById('checkout-modal').classList.add('open');
@@ -929,29 +985,17 @@ function initCheckout() {
   });
 
   whatsappBtn.addEventListener('click', async () => {
-    try {
-      await saveOrder(checkoutData, cart.items, cart.getTotal());
-    } catch (err) {
-      console.error('Error saving order:', err);
-    }
+    await completeOrder();
     const text = encodeURIComponent(buildOrderText());
     window.open(`https://wa.me/${WHATSAPP_NUMBER}?text=${text}`, '_blank');
-    cart.clear();
-    renderCart();
     showCheckoutStep(3);
   });
 
   emailBtn.addEventListener('click', async () => {
-    try {
-      await saveOrder(checkoutData, cart.items, cart.getTotal());
-    } catch (err) {
-      console.error('Error saving order:', err);
-    }
+    await completeOrder();
     const subject = encodeURIComponent(`Pedido - ${checkoutData.name}`);
     const body = encodeURIComponent(buildOrderText());
     window.open(`mailto:${SHOP_EMAIL}?subject=${subject}&body=${body}`, '_blank');
-    cart.clear();
-    renderCart();
     showCheckoutStep(3);
   });
 
@@ -1011,15 +1055,27 @@ async function renderProductDetail(itemCode) {
   const safeName = (product.name || '').replace(/"/g, '&quot;');
   const disabled = !product.inStock ? 'disabled' : '';
 
+  // SEO dinámico: title, meta description, OG, canonical y JSON-LD Product+Breadcrumb
+  updateProductSEO(product);
+
   app.innerHTML = `
     <section class="product-detail">
       <div class="product-detail-wrap">
-        <nav class="breadcrumbs" aria-label="Breadcrumb">
-          <a href="#" data-page="home">Inicio</a>
+        <nav class="breadcrumbs" aria-label="Breadcrumb" itemscope itemtype="https://schema.org/BreadcrumbList">
+          <a href="#" data-page="home" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span itemprop="name">Inicio</span>
+            <meta itemprop="position" content="1" />
+          </a>
           <span aria-hidden="true">›</span>
-          <a href="#" data-page="grow">Grow Shop</a>
+          <a href="#" data-page="grow" itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span itemprop="name">Grow Shop</span>
+            <meta itemprop="position" content="2" />
+          </a>
           <span aria-hidden="true">›</span>
-          <span>${product.id}</span>
+          <span itemprop="itemListElement" itemscope itemtype="https://schema.org/ListItem">
+            <span itemprop="name">${product.id}</span>
+            <meta itemprop="position" content="3" />
+          </span>
         </nav>
 
         <div class="product-detail-grid">
@@ -1109,6 +1165,134 @@ async function renderProductDetail(itemCode) {
       showToast(`${qty} x ${product.name} anadido al carrito`);
     });
   }
+}
+
+// ============================================
+// SEO dinamico (producto detalle)
+// ============================================
+/**
+ * Actualiza <title>, meta description, OG, canonical y JSON-LD Product+Breadcrumb
+ * cuando se renderiza un producto. Esencial para rich snippets en Google y
+ * previsualizacion en WhatsApp/Facebook/Twitter al compartir URL de producto.
+ */
+function updateProductSEO(product) {
+  const siteName = 'Grow El Druida';
+  const siteUrl = 'https://groweldruida.es';
+  const productUrl = `${siteUrl}/#producto/${product.id}`;
+  const productName = product.name || product.id;
+  const description = product.description
+    ? product.description.slice(0, 160)
+    : `${productName} — ${product.brand || 'Grow Shop'} · ${product.price.toFixed(2)}€ · Stock real en Grow El Druida.`;
+  const image = product.image?.startsWith('http') ? product.image : `${siteUrl}${product.image || '/images/logo.jpg'}`;
+
+  // 1. <title>
+  document.title = `${productName} — ${siteName}`;
+
+  // 2. meta description
+  setMetaTag('name', 'description', description);
+
+  // 3. canonical
+  setLinkTag('canonical', productUrl);
+
+  // 4. OG tags
+  setMetaTag('property', 'og:title', `${productName} — ${siteName}`);
+  setMetaTag('property', 'og:description', description);
+  setMetaTag('property', 'og:url', productUrl);
+  setMetaTag('property', 'og:image', image);
+  setMetaTag('property', 'og:type', 'product');
+
+  // 5. Twitter card
+  setMetaTag('name', 'twitter:title', `${productName} — ${siteName}`);
+  setMetaTag('name', 'twitter:description', description);
+  setMetaTag('name', 'twitter:image', image);
+
+  // 6. JSON-LD Product + BreadcrumbList
+  const productSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'Product',
+    name: productName,
+    description,
+    image,
+    sku: product.id,
+    brand: {
+      '@type': 'Brand',
+      name: product.brand || siteName,
+    },
+    offers: {
+      '@type': 'Offer',
+      url: productUrl,
+      priceCurrency: 'EUR',
+      price: product.price.toFixed(2),
+      availability: product.inStock
+        ? 'https://schema.org/InStock'
+        : 'https://schema.org/OutOfStock',
+      priceValidUntil: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+      seller: {
+        '@type': 'Organization',
+        name: siteName,
+      },
+    },
+  };
+  const breadcrumbSchema = {
+    '@context': 'https://schema.org',
+    '@type': 'BreadcrumbList',
+    itemListElement: [
+      { '@type': 'ListItem', position: 1, name: 'Inicio', item: siteUrl },
+      { '@type': 'ListItem', position: 2, name: 'Grow Shop', item: `${siteUrl}/#grow` },
+      { '@type': 'ListItem', position: 3, name: productName, item: productUrl },
+    ],
+  };
+  setJsonLd('product-schema', productSchema);
+  setJsonLd('breadcrumb-schema', breadcrumbSchema);
+}
+
+/**
+ * Restaura los metas por defecto cuando el usuario navega fuera del detalle.
+ * Llamado desde navigateTo() cuando la page no es 'product'.
+ */
+function resetSEOToDefault() {
+  document.title = 'Grow El Druida — Grow Shop Profesional | Iluminación, Fertilizantes, Sustratos';
+  setMetaTag('name', 'description', 'Grow shop online con +3000 productos de cultivo profesional: iluminación LED, fertilizantes, sustratos, control de clima y mucho más. Partner oficial de Natural Systems. Envío discreto a toda España.');
+  setLinkTag('canonical', 'https://groweldruida.es/');
+  setMetaTag('property', 'og:title', 'Grow El Druida — Grow Shop Profesional');
+  setMetaTag('property', 'og:description', '+3000 productos de cultivo profesional. Iluminación LED, fertilizantes, sustratos y control de clima. Partner oficial Natural Systems.');
+  setMetaTag('property', 'og:url', 'https://groweldruida.es/');
+  setMetaTag('property', 'og:image', 'https://groweldruida.es/images/logo.jpg');
+  setMetaTag('property', 'og:type', 'website');
+  // Elimina JSON-LD especifico de producto
+  document.getElementById('product-schema')?.remove();
+  document.getElementById('breadcrumb-schema')?.remove();
+}
+
+function setMetaTag(attrName, attrValue, content) {
+  let tag = document.querySelector(`meta[${attrName}="${attrValue}"]`);
+  if (!tag) {
+    tag = document.createElement('meta');
+    tag.setAttribute(attrName, attrValue);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('content', content);
+}
+
+function setLinkTag(rel, href) {
+  let tag = document.querySelector(`link[rel="${rel}"]`);
+  if (!tag) {
+    tag = document.createElement('link');
+    tag.setAttribute('rel', rel);
+    document.head.appendChild(tag);
+  }
+  tag.setAttribute('href', href);
+}
+
+function setJsonLd(id, data) {
+  let tag = document.getElementById(id);
+  if (!tag) {
+    tag = document.createElement('script');
+    tag.type = 'application/ld+json';
+    tag.id = id;
+    document.head.appendChild(tag);
+  }
+  tag.textContent = JSON.stringify(data);
 }
 
 // ============================================

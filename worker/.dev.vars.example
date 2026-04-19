@@ -12,3 +12,16 @@ SUPABASE_SERVICE_KEY=REPLACE_ME
 # Secret compartido para invocar el endpoint /sync manualmente
 # Genera uno random (ej. `openssl rand -hex 32`) y guardalo bien.
 TRIGGER_SECRET=REPLACE_ME
+
+# ============================================
+# Emails transaccionales (Resend)
+# ============================================
+# Crear cuenta en https://resend.com (100 emails/dia gratis)
+# Verificar dominio groweldruida.es (anadir SPF + DKIM en DNS)
+RESEND_API_KEY=REPLACE_ME
+SHOP_EMAIL=pedidos@groweldruida.es          # Email "From" de los envios
+SHOP_NOTIFY_EMAIL=mario@groweldruida.es     # Email donde TU recibes las notificaciones
+
+# CORS: dominios permitidos para llamar a /send-order-email
+# Separar por comas, sin espacios. El primero es el default.
+ALLOWED_ORIGINS=https://groweldruida.es,http://localhost:5173
