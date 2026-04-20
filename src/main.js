@@ -7,7 +7,7 @@ import {
   degradedMode,
   totalProductCount,
 } from './data/products.js';
-import { fetchProducts, fetchProductByCode } from './supabase.js';
+import { fetchProducts, fetchProductByCode, fetchFeaturedProducts } from './supabase.js';
 import { cart, renderCart, showToast } from './cart.js';
 // createSmokeParticles — desactivado: el contenedor está oculto en CSS ({display:none})
 // para el look pro y el interval spawneaba nodos DOM inútiles cada 2 s.
@@ -21,6 +21,10 @@ import { esc, computeShipping, meetsMinOrder, MIN_ORDER_VALUE, FREE_SHIPPING_FRO
 // ============================================
 let currentPage = 'home';
 let currentFilter = 'all';
+
+// Productos destacados del home. Se rellenan en init() con la lógica
+// en cascada de fetchFeaturedProducts (manual → margen → ofertas → fallback).
+let homeFeatured = [];
 
 // ============================================
 // NAVIGATION
@@ -103,7 +107,7 @@ function navigateTo(page, filter = 'all', extra = null) {
 // ============================================
 function renderHomePage() {
   const app = document.getElementById('app');
-  const featuredGrow = growProducts.slice(0, 8);
+  const featuredGrow = homeFeatured.length > 0 ? homeFeatured : growProducts.slice(0, 8);
 
   app.innerHTML = `
     <!-- HERO -->
@@ -111,7 +115,7 @@ function renderHomePage() {
       <div class="hero-content fade-in">
         <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" fetchpriority="high" />
         <h2 class="hero-title">GROW EL DRUIDA</h2>
-        <p class="hero-subtitle">Todo lo que tu cultivo necesita. <strong>Precios de partner</strong>, stock real y envío discreto en 24-48h.</p>
+        <p class="hero-subtitle">Todo lo que tu cultivo necesita. <strong>Stock real</strong> y envío discreto en 24-48h a toda España.</p>
         <div class="hero-badges">
           <span class="hero-badge">+${totalProductCount} productos</span>
           <span class="hero-badge">Envío 24-48h</span>
@@ -1314,15 +1318,17 @@ async function init() {
   initCookieBanner();
   window.__navigateTo = navigateTo;
 
-  // Carga inicial: primeros 8 productos para la home + categorias + auth en paralelo.
+  // Carga inicial: destacados curados + categorias + auth + total count en paralelo.
   // Si Supabase tarda, se muestra loading state; si falla, error state.
   renderLoadingPage();
   try {
-    await Promise.all([
-      loadProducts({ limit: 8 }),
+    const [featured] = await Promise.all([
+      fetchFeaturedProducts(8),
+      loadProducts({ limit: 1 }),   // solo para obtener totalProductCount
       loadCategories(),
       initAuth(),
     ]);
+    homeFeatured = featured;
     renderHomePage();
   } catch (err) {
     console.error('[init] error cargando datos:', err);

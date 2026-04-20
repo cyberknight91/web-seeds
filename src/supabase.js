@@ -102,6 +102,102 @@ export async function fetchProducts({
   return { products, total: count ?? products.length, degraded }
 }
 
+// Columnas públicas que viajan al navegador para productos destacados.
+// Explícito para NO exponer `price` (coste de proveedor) ni `margin` (secreto
+// comercial de Druida) aunque el ORDER BY use esas columnas internamente.
+const FEATURED_SELECT =
+  'item_code, name, slug, short_description, description, technical_details, manufacturer, ' +
+  'category_ns_id, images, pvp, stock, in_stock, offer, old_price, badge, uom_code, ' +
+  'weight, width, height, length, is_featured'
+
+/**
+ * Fetch de productos "destacados" para la home. Lógica en cascada:
+ *   1) Marcados `is_featured = true` por Druida en el dashboard → van primero.
+ *   2) Productos con MÁS MARGEN (pvp − price) que tengan stock → rellenan hasta `limit`.
+ *   3) Ofertas activas (si sigue faltando).
+ *   4) Fallback: cualquier producto con stock (catálogo pequeño).
+ *
+ * El margen lo calcula la columna generada `margin` (ver SQL migration).
+ * Se excluye `price` y `margin` del select devuelto al cliente para no
+ * filtrar el coste de proveedor.
+ */
+export async function fetchFeaturedProducts(limit = 8) {
+  const need = () => limit - collected.length
+  const collected = []
+  const seen = new Set()
+  const push = (rows) => {
+    for (const row of rows ?? []) {
+      if (collected.length >= limit) break
+      if (seen.has(row.item_code)) continue
+      seen.add(row.item_code)
+      collected.push(row)
+    }
+  }
+
+  // 1) Destacados manuales (Druida los fija desde Supabase).
+  // Si la columna is_featured no existe aún (SQL migration pendiente),
+  // capturamos y seguimos con los siguientes pasos.
+  try {
+    const { data, error } = await supabase
+      .from('products')
+      .select(FEATURED_SELECT)
+      .eq('active', true)
+      .eq('is_featured', true)
+      .order('item_code', { ascending: true })
+      .limit(limit)
+    if (!error) push(data)
+  } catch {/* columna aún no aplicada; continuar */}
+
+  // 2) Más rentables (ordenados por margen DESC, pvp en rango razonable).
+  // Igual: si la columna margin no existe aún, saltar al paso 3.
+  if (need() > 0) {
+    try {
+      const { data, error } = await supabase
+        .from('products')
+        .select(FEATURED_SELECT)
+        .eq('active', true)
+        .eq('in_stock', true)
+        .gte('display_price', 30)
+        .lte('display_price', 500)
+        .order('margin', { ascending: false })
+        .limit(need() * 3)
+      if (!error) {
+        const top = (data ?? []).slice()
+        for (let i = top.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1))
+          ;[top[i], top[j]] = [top[j], top[i]]
+        }
+        push(top)
+      }
+    } catch {/* columna margin aún no aplicada; continuar */}
+  }
+
+  // 3) Ofertas activas
+  if (need() > 0) {
+    const { data } = await supabase
+      .from('products')
+      .select(FEATURED_SELECT)
+      .eq('active', true)
+      .eq('offer', true)
+      .eq('in_stock', true)
+      .limit(need())
+    push(data)
+  }
+
+  // 4) Fallback extremo: lo que haya con stock
+  if (need() > 0) {
+    const { data } = await supabase
+      .from('products')
+      .select(FEATURED_SELECT)
+      .eq('active', true)
+      .eq('in_stock', true)
+      .limit(need())
+    push(data)
+  }
+
+  return collected.map(mapDbProduct)
+}
+
 /**
  * Fetch un producto por itemCode. Devuelve null si no existe o esta inactivo.
  */
