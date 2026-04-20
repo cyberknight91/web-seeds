@@ -2099,49 +2099,6 @@ img {
     display: none;
   }
 
-  /* Compactar header en mobile para que el hamburger no se salga del viewport */
-  .header-inner {
-    padding: 0 12px;
-    gap: 10px;
-  }
-  .logo-link {
-    gap: 8px !important;
-    min-width: 0;
-    flex: 1 1 auto;
-  }
-  .logo-text {
-    min-width: 0;
-    overflow: hidden;
-  }
-  .logo-text h1 {
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-  }
-  .logo-img {
-    width: 42px;
-    height: 42px;
-    flex-shrink: 0;
-  }
-  .header-actions {
-    gap: 8px;
-    flex-shrink: 0;
-  }
-  .cart-btn {
-    padding: 6px 10px;
-    font-size: 0.9rem;
-    border-width: 1px;
-    gap: 4px;
-  }
-  .cart-count {
-    width: 18px;
-    height: 18px;
-    font-size: 0.7rem;
-  }
-  .menu-toggle {
-    padding: 6px 10px;
-    font-size: 1.2rem;
-  }
 }
 
 /* === SCROLLBAR === */
@@ -3157,3 +3114,58 @@ img {
   box-shadow: 0 0 0 3px rgba(0, 255, 136, 0.08);
 }
 .logo-mark img { width: 32px; height: 32px; }
+
+/* ===========================================================
+   Mobile header (< 640px) — AL FINAL a proposito para ganar
+   la cascade frente a los !important globales anteriores.
+   =========================================================== */
+@media (max-width: 640px) {
+  .header-inner {
+    padding: 0 12px !important;
+    gap: 10px !important;
+  }
+  .logo-link {
+    gap: 8px !important;
+    min-width: 0;
+    flex: 1 1 auto;
+    overflow: hidden;
+  }
+  .logo-text {
+    min-width: 0;
+    overflow: hidden;
+  }
+  .logo-text h1 {
+    font-size: 1.05rem !important;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    letter-spacing: 0.5px !important;
+  }
+  .logo-subtitle {
+    display: none !important;
+  }
+  .logo-img {
+    width: 38px !important;
+    height: 38px !important;
+    flex-shrink: 0;
+  }
+  .header-actions {
+    gap: 6px !important;
+    flex-shrink: 0;
+  }
+  .cart-btn {
+    padding: 6px 10px !important;
+    font-size: 0.88rem !important;
+    border-width: 1px !important;
+    gap: 4px !important;
+  }
+  .cart-count {
+    width: 18px !important;
+    height: 18px !important;
+    font-size: 0.7rem !important;
+  }
+  .menu-toggle {
+    padding: 6px 10px !important;
+    font-size: 1.2rem !important;
+  }
+}
