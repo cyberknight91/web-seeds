@@ -1,7 +1,6 @@
 import './style.css';
 import {
   growProducts,
-  allProducts,
   growCategories,
   loadProducts,
   loadCategories,
@@ -10,10 +9,12 @@ import {
 } from './data/products.js';
 import { fetchProducts, fetchProductByCode } from './supabase.js';
 import { cart, renderCart, showToast } from './cart.js';
-import { createSmokeParticles } from './effects.js';
-import { initAuth, getCurrentUser, getProfile } from './auth.js';
+// createSmokeParticles — desactivado: el contenedor está oculto en CSS ({display:none})
+// para el look pro y el interval spawneaba nodos DOM inútiles cada 2 s.
+import { initAuth, getCurrentUser, getProfile, updateProfile } from './auth.js';
 import { saveOrder, getMyOrders } from './orders.js';
 import { initCookieBanner } from './cookies.js';
+import { esc } from './utils.js';
 
 // ============================================
 // APP STATE
@@ -43,8 +44,9 @@ function initNavigation() {
 
   // Search
   const searchInput = document.getElementById('search-input');
-  searchInput.addEventListener('keypress', (e) => {
+  searchInput.addEventListener('keydown', (e) => {
     if (e.key === 'Enter') {
+      e.preventDefault();
       const query = searchInput.value.trim();
       if (query) {
         renderSearchResults(query);
@@ -126,7 +128,7 @@ function renderHomePage() {
     <!-- MARQUEE -->
     <div class="marquee-banner">
       <span class="marquee-text">
-        ENVIO GRATIS a partir de 50EUR --- OFERTAS SEMANALES --- GROW SHOP COMPLETO --- LED, FERTILIZANTES, SUSTRATOS, CONTROL DE CLIMA Y MAS ---
+        ENVÍO GRATIS A PARTIR DE 50€ --- OFERTAS SEMANALES --- GROW SHOP COMPLETO --- LED, FERTILIZANTES, SUSTRATOS, CONTROL DE CLIMA Y MÁS ---
       </span>
     </div>
 
@@ -149,7 +151,7 @@ function renderHomePage() {
     <!-- FEATURED GROW -->
     <section class="products-section">
       <h2 class="section-title">DESTACADOS</h2>
-      <p class="section-subtitle">${totalProductCount} productos en nuestro catalogo</p>
+      <p class="section-subtitle">${totalProductCount} productos en nuestro catálogo</p>
       <div class="product-grid">
         ${featuredGrow.map(p => renderGrowCard(p)).join('')}
       </div>
@@ -187,16 +189,18 @@ let growPageState = {
   degraded: false,
   sort: 'default',     // 'default' | 'price-asc' | 'price-desc'
   showOutOfStock: false, // por defecto oculta agotados
+  search: '',          // texto del buscador en /grow
 }
 const PAGE_SIZE = 50
 
 async function renderGrowPage(filter = 'all', opts = {}) {
   const app = document.getElementById('app');
 
-  // Si cambia filtro/sort/stock -> reset
+  // Si cambia filtro/sort/stock/search -> reset
   const optsChanged =
     (opts.sort !== undefined && opts.sort !== growPageState.sort) ||
-    (opts.showOutOfStock !== undefined && opts.showOutOfStock !== growPageState.showOutOfStock)
+    (opts.showOutOfStock !== undefined && opts.showOutOfStock !== growPageState.showOutOfStock) ||
+    (opts.search !== undefined && opts.search !== growPageState.search)
   if (growPageState.filter !== filter || optsChanged) {
     growPageState = {
       filter,
@@ -206,6 +210,7 @@ async function renderGrowPage(filter = 'all', opts = {}) {
       degraded: false,
       sort: opts.sort ?? growPageState.sort,
       showOutOfStock: opts.showOutOfStock ?? growPageState.showOutOfStock,
+      search: opts.search ?? growPageState.search,
     }
   }
 
@@ -230,6 +235,7 @@ async function renderGrowPage(filter = 'all', opts = {}) {
     offset: growPageState.offset,
     onlyInStock: !growPageState.showOutOfStock,
     sort: growPageState.sort,
+    search: growPageState.search || null,
   });
   growPageState.products = growPageState.products.concat(products);
   growPageState.total = total;
@@ -246,13 +252,26 @@ async function renderGrowPage(filter = 'all', opts = {}) {
     ${degraded ? renderDegradedBanner() : ''}
 
     <section class="products-section">
-      <div class="filter-bar">
-        ${Object.entries(growCategories).map(([key, label]) => `
-          <button class="filter-btn ${filter === key ? 'active' : ''}" data-category="${key}">${label}</button>
-        `).join('')}
+      <div class="catalog-search">
+        <input
+          type="search"
+          id="grow-search-input"
+          placeholder="Buscar en el catálogo (nombre, descripción, marca, código...)"
+          value="${esc(growPageState.search || '')}"
+          autocomplete="off"
+          aria-label="Buscar productos en el catálogo"
+        />
+        ${growPageState.search ? `<button type="button" id="grow-search-clear" class="catalog-search-clear" aria-label="Limpiar búsqueda">&times;</button>` : ''}
       </div>
-
       <div class="catalog-controls">
+        <label class="catalog-control">
+          Categoría:
+          <select id="category-select">
+            ${growCategories.map(([key, label]) => `
+              <option value="${esc(key)}" ${filter === key ? 'selected' : ''}>${esc(label)}</option>
+            `).join('')}
+          </select>
+        </label>
         <label class="catalog-control">
           <input type="checkbox" id="toggle-out-of-stock" ${growPageState.showOutOfStock ? 'checked' : ''} />
           <span>Mostrar agotados</span>
@@ -270,7 +289,7 @@ async function renderGrowPage(filter = 'all', opts = {}) {
       <div class="product-grid fade-in">
         ${growPageState.products.map(p => renderGrowCard(p)).join('')}
       </div>
-      ${growPageState.products.length === 0 ? '<div class="no-results"><div class="no-results-icon">&#128161;</div><p>No hay productos en esta categoria</p></div>' : ''}
+      ${growPageState.products.length === 0 ? `<div class="no-results"><div class="no-results-icon" aria-hidden="true">&#128269;</div><p>${growPageState.search ? `No encontramos productos para "${esc(growPageState.search)}"` : 'No hay productos en esta categoría'}</p></div>` : ''}
       ${growPageState.products.length < total ? `
         <div style="text-align:center; margin-top:40px;">
           <button type="button" class="btn btn-secondary" id="load-more-btn">
@@ -282,7 +301,46 @@ async function renderGrowPage(filter = 'all', opts = {}) {
   `;
 
   bindProductEvents();
-  bindFilterEvents();
+
+  const catSelect = document.getElementById('category-select');
+  if (catSelect) {
+    catSelect.addEventListener('change', () => {
+      renderGrowPage(catSelect.value);
+    });
+  }
+
+  const growSearch = document.getElementById('grow-search-input');
+  if (growSearch) {
+    // Mantener foco y posición al re-renderizar tras debounce
+    if (document.activeElement === growSearch) {
+      const pos = growSearch.value.length;
+      growSearch.setSelectionRange(pos, pos);
+    }
+    let searchTimer;
+    growSearch.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      const value = growSearch.value.trim();
+      searchTimer = setTimeout(() => {
+        if (value !== (growPageState.search || '')) {
+          renderGrowPage(filter, { search: value });
+        }
+      }, 300);
+    });
+    growSearch.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        e.preventDefault();
+        growSearch.value = '';
+        renderGrowPage(filter, { search: '' });
+      }
+    });
+  }
+
+  const growSearchClear = document.getElementById('grow-search-clear');
+  if (growSearchClear) {
+    growSearchClear.addEventListener('click', () => {
+      renderGrowPage(filter, { search: '' });
+    });
+  }
 
   const loadMoreBtn = document.getElementById('load-more-btn');
   if (loadMoreBtn) {
@@ -418,12 +476,12 @@ function renderAboutPage() {
     <section class="about-section">
       <div class="about-content">
         <div class="about-text">
-          <p><strong>Grow El Druida</strong> nace de la pasion por el cultivo profesional y el equipamiento de alta gama para horticultura tecnica.</p>
-          <p>Somos un grow shop completo donde encontraras todo el equipamiento profesional que necesitas: iluminacion LED, fertilizantes, sustratos, control de clima, sistemas de cultivo y herramientas de medicion.</p>
-          <p>Trabajamos directamente con <strong>Natural Systems</strong> como distribuidor oficial, garantizando la maxima calidad y stock en tiempo real en cada producto del catalogo.</p>
-          <p>Nuestro equipo cuenta con mas de <strong>20 anos de experiencia</strong> en el sector, asesorandote en cada paso de tu proyecto de cultivo.</p>
+          <p><strong>Grow El Druida</strong> nace de la pasión por el cultivo profesional y el equipamiento de alta gama para horticultura técnica.</p>
+          <p>Somos un grow shop completo donde encontrarás todo el equipamiento profesional que necesitas: iluminación LED, fertilizantes, sustratos, control de clima, sistemas de cultivo y herramientas de medición.</p>
+          <p>Trabajamos directamente con <strong>Natural Systems</strong> como distribuidor oficial, garantizando la máxima calidad y stock en tiempo real en cada producto del catálogo.</p>
+          <p>Nuestro equipo cuenta con más de <strong>20 años de experiencia</strong> en el sector, asesorándote en cada paso de tu proyecto de cultivo.</p>
         </div>
-        <img src="/images/logo.jpg" alt="Grow El Druida" class="about-img" />
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="about-img" loading="lazy" />
       </div>
       <div class="about-features">
         <div class="about-feature">
@@ -452,9 +510,9 @@ function renderAboutPage() {
           <p>Equipo experto para resolver todas tus dudas</p>
         </div>
         <div class="about-feature">
-          <div class="about-feature-icon">&#128154;</div>
-          <h3>+20 Anos</h3>
-          <p>Experiencia en el sector cannabico</p>
+          <div class="about-feature-icon" aria-hidden="true">&#128154;</div>
+          <h3>+20 Años</h3>
+          <p>Experiencia en cultivo técnico y horticultura profesional</p>
         </div>
       </div>
     </section>
@@ -473,7 +531,7 @@ async function renderOrdersPage() {
       <section class="products-section" style="text-align:center; padding: 80px 20px;">
         <div class="no-results">
           <div class="no-results-icon">&#128274;</div>
-          <p>Inicia sesion para ver tus pedidos</p>
+          <p>Inicia sesión para ver tus pedidos</p>
         </div>
       </section>
     `;
@@ -526,21 +584,21 @@ async function renderOrdersPage() {
             <div class="order-card">
               <div class="order-card-header">
                 <div>
-                  <span class="order-number">Pedido #${order.order_number}</span>
-                  <span class="order-date">${date}</span>
+                  <span class="order-number">Pedido #${esc(order.order_number)}</span>
+                  <span class="order-date">${esc(date)}</span>
                 </div>
-                <span class="order-status ${statusClass}">${statusMap[order.status] || order.status}</span>
+                <span class="order-status ${statusClass}">${esc(statusMap[order.status] || order.status)}</span>
               </div>
               <div class="order-card-items">
                 ${order.order_items.map(item => `
                   <div class="order-item-row">
-                    <span>${item.product_name} ${item.product_label ? `(${item.product_label})` : ''} x${item.quantity}</span>
+                    <span>${esc(item.product_name)} ${item.product_label ? `(${esc(item.product_label)})` : ''} x${item.quantity}</span>
                     <span>${item.subtotal.toFixed(2)} &euro;</span>
                   </div>
                 `).join('')}
               </div>
               <div class="order-card-footer">
-                <span>Envio: ${order.shipping_cost > 0 ? order.shipping_cost.toFixed(2) + ' &euro;' : 'GRATIS'}</span>
+                <span>Envío: ${order.shipping_cost > 0 ? order.shipping_cost.toFixed(2) + ' &euro;' : 'GRATIS'}</span>
                 <span class="order-total">Total: ${order.total.toFixed(2)} &euro;</span>
               </div>
             </div>
@@ -570,7 +628,7 @@ async function renderProfilePage() {
       <section class="products-section" style="text-align:center; padding: 80px 20px;">
         <div class="no-results">
           <div class="no-results-icon">&#128274;</div>
-          <p>Inicia sesion para ver tu perfil</p>
+          <p>Inicia sesión para ver tu perfil</p>
         </div>
       </section>
     `;
@@ -583,7 +641,7 @@ async function renderProfilePage() {
     <section class="hero-section" style="padding: 40px 20px;">
       <div class="hero-content">
         <h2 class="hero-title" style="font-size: 3rem;">MI PERFIL</h2>
-        <p class="hero-subtitle">${user.email}</p>
+        <p class="hero-subtitle">${esc(user.email)}</p>
       </div>
     </section>
     <section class="products-section">
@@ -592,25 +650,25 @@ async function renderProfilePage() {
           <div class="form-row">
             <div class="form-group">
               <label for="profile-name">Nombre completo</label>
-              <input type="text" id="profile-name" value="${profile?.full_name || ''}" placeholder="Tu nombre" />
+              <input type="text" id="profile-name" value="${esc(profile?.full_name || '')}" placeholder="Tu nombre" autocomplete="name" />
             </div>
             <div class="form-group">
-              <label for="profile-phone">Telefono</label>
-              <input type="tel" id="profile-phone" value="${profile?.phone || ''}" placeholder="+34 600 000 000" />
+              <label for="profile-phone">Teléfono</label>
+              <input type="tel" id="profile-phone" value="${esc(profile?.phone || '')}" placeholder="+34 600 000 000" autocomplete="tel" />
             </div>
           </div>
           <div class="form-group">
-            <label for="profile-address">Direccion</label>
-            <input type="text" id="profile-address" value="${profile?.address || ''}" placeholder="Calle, numero, piso..." />
+            <label for="profile-address">Dirección</label>
+            <input type="text" id="profile-address" value="${esc(profile?.address || '')}" placeholder="Calle, número, piso..." autocomplete="street-address" />
           </div>
           <div class="form-row">
             <div class="form-group">
               <label for="profile-city">Ciudad</label>
-              <input type="text" id="profile-city" value="${profile?.city || ''}" placeholder="Ciudad" />
+              <input type="text" id="profile-city" value="${esc(profile?.city || '')}" placeholder="Ciudad" autocomplete="address-level2" />
             </div>
             <div class="form-group">
-              <label for="profile-zip">Codigo Postal</label>
-              <input type="text" id="profile-zip" value="${profile?.zip || ''}" placeholder="28001" />
+              <label for="profile-zip">Código Postal</label>
+              <input type="text" id="profile-zip" value="${esc(profile?.zip || '')}" placeholder="28001" autocomplete="postal-code" />
             </div>
           </div>
           <div id="profile-msg" class="auth-success hidden"></div>
@@ -622,7 +680,6 @@ async function renderProfilePage() {
 
   document.getElementById('profile-form').addEventListener('submit', async (e) => {
     e.preventDefault();
-    const { updateProfile } = await import('./auth.js');
     const msgEl = document.getElementById('profile-msg');
 
     const { error } = await updateProfile({
@@ -701,7 +758,7 @@ function renderGrowCard(product) {
                 data-price="${product.price}"
                 data-image="${product.image}"
                 ${disabled}>
-          ${product.inStock ? 'Anadir al carrito' : 'Agotado'}
+          ${product.inStock ? 'Añadir al carrito' : 'Agotado'}
         </button>
       </div>
     </div>
@@ -755,15 +812,6 @@ function bindNavigationEvents() {
   });
 }
 
-function bindFilterEvents() {
-  document.querySelectorAll('.filter-btn').forEach(btn => {
-    btn.addEventListener('click', () => {
-      const category = btn.dataset.category;
-      renderGrowPage(category);
-    });
-  });
-}
-
 // ============================================
 // CART UI
 // ============================================
@@ -801,7 +849,9 @@ function initCart() {
 // ============================================
 // CHECKOUT SYSTEM
 // ============================================
-// >>> PON TU NUMERO DE WHATSAPP AQUI (con codigo de pais, sin + ni espacios) <<<
+// >>> TODO PRE-DEPLOY: sustituir por el número real de WhatsApp del Druida
+//     (código país + número, SIN + ni espacios). Ej: 34612345678.
+//     Mientras siga el placeholder, los checkouts llegan a número inexistente.
 const WHATSAPP_NUMBER = '34600000000';
 const SHOP_EMAIL = 'info@groweldruida.es';
 // URL del Worker de Cloudflare que envia emails transaccionales.
@@ -1080,17 +1130,17 @@ async function renderProductDetail(itemCode) {
 
         <div class="product-detail-grid">
           <div class="product-detail-media">
-            <img src="${product.image}" alt="${safeName}" class="product-detail-img" />
+            <img src="${esc(product.image)}" alt="${esc(product.name)}" class="product-detail-img" loading="lazy" />
           </div>
 
           <div class="product-detail-info">
-            ${product.isPlaceholder ? '<div class="detail-placeholder-note"><strong>Catalogo en actualizacion.</strong> Nombre completo, descripcion e imagen definitiva disponibles en breve. Precio y stock son reales.</div>' : ''}
+            ${product.isPlaceholder ? '<div class="detail-placeholder-note"><strong>Catálogo en actualización.</strong> Nombre completo, descripción e imagen definitiva disponibles en breve. Precio y stock son reales.</div>' : ''}
 
-            <div class="detail-kicker">${product.brand || 'Referencia'}</div>
-            <h1 class="detail-title">${product.name}</h1>
-            <div class="detail-itemcode">C&oacute;digo: <code>${product.id}</code></div>
+            <div class="detail-kicker">${esc(product.brand || 'Referencia')}</div>
+            <h1 class="detail-title">${esc(product.name)}</h1>
+            <div class="detail-itemcode">Código: <code>${esc(product.id)}</code></div>
 
-            ${product.description ? `<p class="detail-description">${product.description}</p>` : ''}
+            ${product.description ? `<p class="detail-description">${esc(product.description)}</p>` : ''}
 
             <div class="detail-price-block">
               <div class="detail-price">${product.price.toFixed(2)}&euro;</div>
@@ -1104,31 +1154,31 @@ async function renderProductDetail(itemCode) {
 
             ${product.technicalDetails ? `
               <details class="detail-technical">
-                <summary>Detalles t&eacute;cnicos</summary>
-                <div>${product.technicalDetails}</div>
+                <summary>Detalles técnicos</summary>
+                <div>${esc(product.technicalDetails)}</div>
               </details>
             ` : ''}
 
             <div class="detail-actions">
               <div class="detail-qty">
                 <button type="button" class="qty-btn" id="qty-minus" aria-label="Disminuir">&minus;</button>
-                <input type="number" id="qty-input" value="1" min="1" max="${Math.max(1, product.stock)}" />
+                <input type="number" id="qty-input" value="1" min="1" max="${Math.max(1, product.stock)}" aria-label="Cantidad" />
                 <button type="button" class="qty-btn" id="qty-plus" aria-label="Aumentar">+</button>
               </div>
               <button type="button"
                       class="add-to-cart-btn detail-add-btn"
                       id="detail-add-to-cart"
-                      data-id="${product.id}"
-                      data-name="${safeName}"
+                      data-id="${esc(product.id)}"
+                      data-name="${esc(product.name)}"
                       data-price="${product.price}"
-                      data-image="${product.image}"
+                      data-image="${esc(product.image)}"
                       ${disabled}>
-                ${product.inStock ? 'A&ntilde;adir al carrito' : 'Agotado'}
+                ${product.inStock ? 'Añadir al carrito' : 'Agotado'}
               </button>
             </div>
 
             <div class="detail-back">
-              <a href="#" data-page="grow" class="detail-back-link">&larr; Volver al cat&aacute;logo</a>
+              <a href="/#grow" data-page="grow" class="detail-back-link">&larr; Volver al catálogo</a>
             </div>
           </div>
         </div>
@@ -1302,7 +1352,6 @@ async function init() {
   initNavigation();
   initCart();
   initCheckout();
-  createSmokeParticles();
   initCookieBanner();
   window.__navigateTo = navigateTo;
 
@@ -1327,8 +1376,8 @@ function renderLoadingPage() {
   app.innerHTML = `
     <section class="hero-section" style="padding: 120px 20px; text-align:center;">
       <div class="hero-content">
-        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" />
-        <h2 class="hero-title" style="font-size: 2rem;">Cargando catalogo...</h2>
+        <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" width="120" height="120" />
+        <h2 class="hero-title" style="font-size: 2rem;">Cargando catálogo...</h2>
         <p class="hero-subtitle">Conectando con Natural Systems</p>
       </div>
     </section>
@@ -1341,13 +1390,14 @@ function renderErrorPage(err) {
     <section class="hero-section" style="padding: 80px 20px; text-align:center;">
       <div class="hero-content">
         <h2 class="hero-title" style="font-size: 2rem;">Ups, algo ha fallado</h2>
-        <p class="hero-subtitle">${err?.message || 'No pudimos cargar el catalogo'}</p>
+        <p class="hero-subtitle">${esc(err?.message || 'No pudimos cargar el catálogo')}</p>
         <div class="hero-cta" style="justify-content:center;">
-          <button type="button" class="btn btn-primary" onclick="window.location.reload()">Reintentar</button>
+          <button type="button" class="btn btn-primary" id="btn-retry">Reintentar</button>
         </div>
       </div>
     </section>
   `;
+  document.getElementById('btn-retry')?.addEventListener('click', () => window.location.reload());
 }
 
 document.addEventListener('DOMContentLoaded', init);

@@ -29,7 +29,6 @@ function mapDbProduct(row) {
     description: row.short_description ?? row.description ?? '',
     technicalDetails: row.technical_details ?? '',
     price: row.pvp ? Number(row.pvp) : (row.price ? Number(row.price) : 0),
-    costPrice: row.price ? Number(row.price) : 0, // lo que pagas a NS (no mostrar)
     stock: row.stock ?? 0,
     inStock: !!row.in_stock,
     image: Array.isArray(row.images) && row.images.length > 0 ? row.images[0] : '/images/logo.jpg',
@@ -121,20 +120,34 @@ export async function fetchProductByCode(itemCode) {
 }
 
 /**
- * Fetch categorias desde Supabase.
- * Si NS no ha devuelto categorias aun (bug), devuelve []
+ * Fetch categorias desde Supabase, solo aquellas con productos activos.
+ * NS devuelve un árbol enorme (400+ nodos) con muchas ramas sin productos
+ * directos. Filtrar aquí evita que la UI muestre filtros que no producen
+ * resultados.
  */
 export async function fetchCategories() {
-  const { data, error } = await supabase
-    .from('categories')
-    .select('ns_id, name, slug, parent_ns_id, position')
-    .eq('active', true)
-    .order('position', { ascending: true })
-    .order('name', { ascending: true })
+  const [catsRes, idsRes] = await Promise.all([
+    supabase
+      .from('categories')
+      .select('ns_id, name, slug, parent_ns_id, position')
+      .eq('active', true)
+      .order('name', { ascending: true }),
+    supabase
+      .from('products')
+      .select('category_ns_id')
+      .eq('active', true)
+      .not('category_ns_id', 'is', null),
+  ])
 
-  if (error) {
-    console.error('[fetchCategories] error:', error.message)
+  if (catsRes.error) {
+    console.error('[fetchCategories] error:', catsRes.error.message)
     return []
   }
-  return data ?? []
+  if (idsRes.error) {
+    console.error('[fetchCategories] products error:', idsRes.error.message)
+    return catsRes.data ?? []
+  }
+
+  const withProducts = new Set((idsRes.data ?? []).map((r) => r.category_ns_id))
+  return (catsRes.data ?? []).filter((c) => withProducts.has(c.ns_id))
 }

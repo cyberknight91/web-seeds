@@ -1,4 +1,5 @@
 import { supabase } from './supabase.js'
+import { esc } from './utils.js'
 
 let currentUser = null
 
@@ -76,17 +77,17 @@ function updateAuthUI() {
 
   if (currentUser) {
     const name = currentUser.user_metadata?.full_name || currentUser.email
-    authBtn.innerHTML = `<span class="auth-user-name">${name}</span>`
+    authBtn.innerHTML = `<span class="auth-user-name">${esc(name)}</span>`
     authBtn.classList.add('logged-in')
     if (mobileLink) {
       mobileLink.textContent = name
       mobileLink.dataset.loggedIn = 'true'
     }
   } else {
-    authBtn.innerHTML = 'Iniciar Sesion'
+    authBtn.textContent = 'Iniciar Sesión'
     authBtn.classList.remove('logged-in')
     if (mobileLink) {
-      mobileLink.textContent = 'Iniciar Sesion'
+      mobileLink.textContent = 'Iniciar Sesión'
       mobileLink.dataset.loggedIn = 'false'
     }
   }
@@ -262,7 +263,7 @@ export async function initAuth() {
       errorEl.textContent = error.message
       errorEl.classList.remove('hidden')
     } else {
-      successEl.textContent = 'Cuenta creada. Revisa tu email para confirmar o inicia sesion.'
+      successEl.textContent = 'Cuenta creada. Revisa tu email para confirmar o inicia sesión.'
       successEl.classList.remove('hidden')
       document.getElementById('register-form').reset()
     }

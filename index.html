@@ -29,8 +29,7 @@
   <meta name="twitter:image" content="https://groweldruida.es/images/logo.jpg" />
 
   <!-- Theme + mobile app -->
-  <meta name="theme-color" content="#00ff88" media="(prefers-color-scheme: dark)" />
-  <meta name="theme-color" content="#0d0d0d" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#0a0a0f" />
   <meta name="format-detection" content="telephone=no" />
   <meta name="color-scheme" content="dark" />
 
@@ -49,11 +48,17 @@
     "logo": "https://groweldruida.es/images/logo.jpg",
     "image": "https://groweldruida.es/images/logo.jpg",
     "priceRange": "€€",
+    "currenciesAccepted": "EUR",
+    "paymentAccepted": "Transferencia bancaria, Bizum, PayPal",
     "address": {
       "@type": "PostalAddress",
       "addressCountry": "ES"
     },
-    "sameAs": []
+    "areaServed": {
+      "@type": "Country",
+      "name": "España"
+    },
+    "email": "info@groweldruida.es"
   }
   </script>
 
@@ -84,42 +89,42 @@
   <!-- Header -->
   <header class="header">
     <div class="header-inner">
-      <a href="#" class="logo-link" data-page="home">
+      <a href="/" class="logo-link" data-page="home" aria-label="Ir a la portada">
         <img src="/images/logo.jpg" alt="Grow El Druida" class="logo-img" width="56" height="56" fetchpriority="high" />
         <div class="logo-text">
           <h1>Grow El Druida</h1>
           <span class="logo-subtitle">GROW SHOP PROFESIONAL</span>
         </div>
       </a>
-      <nav class="main-nav">
-        <a href="#" class="nav-link active" data-page="home">Inicio</a>
-        <a href="#" class="nav-link" data-page="grow">Grow Shop</a>
-        <a href="#" class="nav-link" data-page="offers">Ofertas</a>
-        <a href="#" class="nav-link" data-page="partners">Partners</a>
-        <a href="#" class="nav-link" data-page="about">Nosotros</a>
+      <nav class="main-nav" aria-label="Navegación principal">
+        <a href="/" class="nav-link active" data-page="home">Inicio</a>
+        <a href="/#grow" class="nav-link" data-page="grow">Grow Shop</a>
+        <a href="/#ofertas" class="nav-link" data-page="offers">Ofertas</a>
+        <a href="/#partners" class="nav-link" data-page="partners">Partners</a>
+        <a href="/#nosotros" class="nav-link" data-page="about">Nosotros</a>
       </nav>
       <div class="header-actions">
         <div class="search-box">
-          <input type="text" id="search-input" placeholder="Buscar productos..." />
-          <button class="search-btn">&#128269;</button>
+          <input type="text" id="search-input" placeholder="Buscar productos..." aria-label="Buscar productos" />
+          <button class="search-btn" aria-label="Buscar">&#128269;</button>
         </div>
-        <button class="cart-btn" id="cart-btn">
+        <button class="cart-btn" id="cart-btn" aria-label="Abrir carrito">
           &#128722; <span class="cart-count" id="cart-count">0</span>
         </button>
-        <button class="auth-btn" id="auth-btn">Iniciar Sesion</button>
-        <button class="menu-toggle" id="menu-toggle">&#9776;</button>
+        <button class="auth-btn" id="auth-btn">Iniciar Sesión</button>
+        <button class="menu-toggle" id="menu-toggle" aria-label="Abrir menú" aria-expanded="false">&#9776;</button>
       </div>
     </div>
   </header>
 
   <!-- Mobile nav -->
   <div class="mobile-nav" id="mobile-nav">
-    <a href="#" class="nav-link active" data-page="home">Inicio</a>
-    <a href="#" class="nav-link" data-page="grow">Grow Shop</a>
-    <a href="#" class="nav-link" data-page="offers">Ofertas</a>
-    <a href="#" class="nav-link" data-page="partners">Partners</a>
-    <a href="#" class="nav-link" data-page="about">Nosotros</a>
-    <a href="#" class="nav-link mobile-auth-link" id="mobile-auth-link">Iniciar Sesion</a>
+    <a href="/" class="nav-link active" data-page="home">Inicio</a>
+    <a href="/#grow" class="nav-link" data-page="grow">Grow Shop</a>
+    <a href="/#ofertas" class="nav-link" data-page="offers">Ofertas</a>
+    <a href="/#partners" class="nav-link" data-page="partners">Partners</a>
+    <a href="/#nosotros" class="nav-link" data-page="about">Nosotros</a>
+    <a href="#" class="nav-link mobile-auth-link" id="mobile-auth-link">Iniciar Sesión</a>
   </div>
 
   <!-- Main Content -->
@@ -151,39 +156,34 @@
       </div>
       <div class="footer-col">
         <h3>Grow Shop</h3>
-        <a href="#" data-page="grow" data-filter="lighting">Iluminacion</a>
-        <a href="#" data-page="grow" data-filter="fertilizers">Fertilizantes</a>
-        <a href="#" data-page="grow" data-filter="substrates">Sustratos</a>
-        <a href="#" data-page="grow" data-filter="climate">Control Clima</a>
-        <a href="#" data-page="grow" data-filter="cultivation">Cultivo</a>
-        <a href="#" data-page="grow" data-filter="measurement">Medicion</a>
+        <a href="/#grow" data-page="grow" data-filter="lighting">Iluminación</a>
+        <a href="/#grow" data-page="grow" data-filter="fertilizers">Fertilizantes</a>
+        <a href="/#grow" data-page="grow" data-filter="substrates">Sustratos</a>
+        <a href="/#grow" data-page="grow" data-filter="climate">Control Clima</a>
+        <a href="/#grow" data-page="grow" data-filter="cultivation">Cultivo</a>
+        <a href="/#grow" data-page="grow" data-filter="measurement">Medición</a>
       </div>
       <div class="footer-col">
         <h3>Partners</h3>
         <a href="https://naturalsystems.es/" target="_blank" rel="noopener noreferrer">Natural Systems</a>
-        <a href="#" data-page="partners">Ver nuestros partners</a>
+        <a href="/#partners" data-page="partners">Ver nuestros partners</a>
         <a href="mailto:info@groweldruida.es?subject=Contacto%20B2B">Contacto B2B</a>
       </div>
       <div class="footer-col">
         <h3>Contacto</h3>
-        <p>info@groweldruida.es</p>
-        <p>+34 600 000 000</p>
-        <div class="social-links">
-          <a href="#">FB</a>
-          <a href="#">IG</a>
-          <a href="#">TW</a>
-        </div>
+        <p><a href="mailto:info@groweldruida.es">info@groweldruida.es</a></p>
+        <p><!-- TODO: sustituir por teléfono real antes de publicar -->+34 600 000 000</p>
       </div>
     </div>
     <div class="footer-bottom">
       <p>&copy; 2026 Grow El Druida. Todos los derechos reservados.</p>
-      <p class="disclaimer">Los productos se venden como articulos de coleccionismo. Consulta la legislacion vigente en tu pais.</p>
-      <nav class="footer-legal" aria-label="Informacion legal">
+      <p class="disclaimer">Los productos se venden como artículos de coleccionismo. Consulta la legislación vigente en tu país.</p>
+      <nav class="footer-legal" aria-label="Información legal">
         <a href="/aviso-legal.html">Aviso legal</a>
         <a href="/privacidad.html">Privacidad</a>
         <a href="/cookies.html">Cookies</a>
-        <a href="/terminos.html">Terminos</a>
-        <a href="/envios-devoluciones.html">Envios y devoluciones</a>
+        <a href="/terminos.html">Términos</a>
+        <a href="/envios-devoluciones.html">Envíos y devoluciones</a>
       </nav>
     </div>
   </footer>
@@ -195,8 +195,8 @@
       <!-- Step 1: Datos -->
       <div class="checkout-step" id="checkout-step-1">
         <div class="checkout-header">
-          <h2>Datos de Envio</h2>
-          <button class="checkout-close" id="checkout-close">&times;</button>
+          <h2>Datos de Envío</h2>
+          <button class="checkout-close" id="checkout-close" aria-label="Cerrar">&times;</button>
         </div>
         <form id="checkout-form" autocomplete="on">
           <div class="form-row">
@@ -205,7 +205,7 @@
               <input type="text" id="checkout-name" name="name" required placeholder="Tu nombre" autocomplete="name" />
             </div>
             <div class="form-group">
-              <label for="checkout-phone">Telefono / WhatsApp *</label>
+              <label for="checkout-phone">Teléfono / WhatsApp *</label>
               <input type="tel" id="checkout-phone" name="phone" required placeholder="+34 600 000 000" autocomplete="tel" />
             </div>
           </div>
@@ -214,8 +214,8 @@
             <input type="email" id="checkout-email" name="email" required placeholder="tu@email.com" autocomplete="email" />
           </div>
           <div class="form-group">
-            <label for="checkout-address">Direccion de envio *</label>
-            <input type="text" id="checkout-address" name="address" required placeholder="Calle, numero, piso..." autocomplete="street-address" />
+            <label for="checkout-address">Dirección de envío *</label>
+            <input type="text" id="checkout-address" name="address" required placeholder="Calle, número, piso..." autocomplete="street-address" />
           </div>
           <div class="form-row">
             <div class="form-group">
@@ -223,7 +223,7 @@
               <input type="text" id="checkout-city" name="city" required placeholder="Ciudad" autocomplete="address-level2" />
             </div>
             <div class="form-group">
-              <label for="checkout-zip">Codigo Postal *</label>
+              <label for="checkout-zip">Código Postal *</label>
               <input type="text" id="checkout-zip" name="zip" required placeholder="28001" autocomplete="postal-code" />
             </div>
           </div>
@@ -248,10 +248,10 @@
         </div>
       </div>
 
-      <!-- Step 3: Confirmacion -->
+      <!-- Step 3: Confirmación -->
       <div class="checkout-step hidden" id="checkout-step-3">
         <div class="checkout-confirmed">
-          <div class="confirmed-icon">&#10003;</div>
+          <div class="confirmed-icon" aria-hidden="true">&#10003;</div>
           <h2>Pedido Enviado</h2>
           <p>Hemos recibido tu pedido. Te contactaremos pronto para confirmar los detalles y el pago.</p>
           <button class="btn-checkout-next" id="checkout-done">Volver a la Tienda</button>
@@ -262,21 +262,22 @@
 
   <!-- Auth Modal -->
   <div class="auth-overlay" id="auth-overlay"></div>
-  <div class="auth-modal" id="auth-modal">
+  <div class="auth-modal" id="auth-modal" role="dialog" aria-modal="true" aria-labelledby="auth-title">
     <div class="auth-inner">
-      <button class="auth-close" id="auth-close">&times;</button>
+      <button class="auth-close" id="auth-close" aria-label="Cerrar">&times;</button>
+      <h2 id="auth-title" class="sr-only">Acceso a tu cuenta</h2>
       <div class="auth-tabs">
-        <button class="auth-tab active" data-tab="login">Iniciar Sesion</button>
+        <button class="auth-tab active" data-tab="login">Iniciar Sesión</button>
         <button class="auth-tab" data-tab="register">Registrarse</button>
       </div>
       <form id="login-form" class="auth-form">
         <div class="form-group">
           <label for="login-email">Email</label>
-          <input type="email" id="login-email" required placeholder="tu@email.com" />
+          <input type="email" id="login-email" required placeholder="tu@email.com" autocomplete="email" />
         </div>
         <div class="form-group">
-          <label for="login-password">Contrasena</label>
-          <input type="password" id="login-password" required placeholder="Tu contrasena" />
+          <label for="login-password">Contraseña</label>
+          <input type="password" id="login-password" required placeholder="Tu contraseña" autocomplete="current-password" />
         </div>
         <div id="login-error" class="auth-error hidden"></div>
         <button type="submit" class="btn btn-primary" style="width:100%">Entrar</button>
@@ -284,15 +285,15 @@
       <form id="register-form" class="auth-form hidden">
         <div class="form-group">
           <label for="register-name">Nombre completo</label>
-          <input type="text" id="register-name" required placeholder="Tu nombre" />
+          <input type="text" id="register-name" required placeholder="Tu nombre" autocomplete="name" />
         </div>
         <div class="form-group">
           <label for="register-email">Email</label>
-          <input type="email" id="register-email" required placeholder="tu@email.com" />
+          <input type="email" id="register-email" required placeholder="tu@email.com" autocomplete="email" />
         </div>
         <div class="form-group">
-          <label for="register-password">Contrasena</label>
-          <input type="password" id="register-password" required minlength="6" placeholder="Minimo 6 caracteres" />
+          <label for="register-password">Contraseña</label>
+          <input type="password" id="register-password" required minlength="6" placeholder="Mínimo 6 caracteres" autocomplete="new-password" />
         </div>
         <div id="register-error" class="auth-error hidden"></div>
         <div id="register-success" class="auth-success hidden"></div>

@@ -2,6 +2,8 @@
 // CART SYSTEM
 // ============================================
 
+import { esc } from './utils.js';
+
 class Cart {
   constructor() {
     this.items = JSON.parse(localStorage.getItem('cart-items') || '[]');
@@ -9,8 +11,9 @@ class Cart {
 
   addItem(item) {
     const existing = this.items.find(i => i.id === item.id && i.label === item.label);
+    const maxStock = typeof item.stock === 'number' ? item.stock : Infinity;
     if (existing) {
-      existing.quantity++;
+      if (existing.quantity < maxStock) existing.quantity++;
     } else {
       this.items.push({ ...item, quantity: 1 });
     }
@@ -23,10 +26,13 @@ class Cart {
   }
 
   updateQuantity(index, delta) {
-    this.items[index].quantity += delta;
-    if (this.items[index].quantity <= 0) {
+    const it = this.items[index];
+    const maxStock = typeof it.stock === 'number' ? it.stock : Infinity;
+    const next = it.quantity + delta;
+    if (next <= 0) {
       this.removeItem(index);
     } else {
+      it.quantity = Math.min(next, maxStock);
       this.save();
     }
   }
@@ -62,9 +68,9 @@ export function renderCart() {
   if (cart.items.length === 0) {
     cartItems.innerHTML = `
       <div class="cart-empty">
-        <div class="cart-empty-icon">&#128722;</div>
-        <p>Tu carrito esta vacio</p>
-        <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.6;">Anade productos para comenzar</p>
+        <div class="cart-empty-icon" aria-hidden="true">&#128722;</div>
+        <p>Tu carrito está vacío</p>
+        <p style="font-size: 0.85rem; margin-top: 8px; opacity: 0.6;">Añade productos para comenzar</p>
       </div>
     `;
     return;
@@ -72,17 +78,17 @@ export function renderCart() {
 
   cartItems.innerHTML = cart.items.map((item, index) => `
     <div class="cart-item">
-      <img src="${item.image}" alt="${item.name}" class="cart-item-img" />
+      <img src="${esc(item.image)}" alt="${esc(item.name)}" class="cart-item-img" loading="lazy" />
       <div class="cart-item-info">
-        <div class="cart-item-name">${item.name}</div>
-        <div class="cart-item-price">${item.price.toFixed(2)} &euro; (${item.label})</div>
+        <div class="cart-item-name">${esc(item.name)}</div>
+        <div class="cart-item-price">${item.price.toFixed(2)} &euro;${item.label ? ` (${esc(item.label)})` : ''}</div>
         <div class="cart-item-qty">
-          <button class="qty-btn" data-action="decrease" data-index="${index}">-</button>
+          <button class="qty-btn" data-action="decrease" data-index="${index}" aria-label="Reducir cantidad">-</button>
           <span>${item.quantity}</span>
-          <button class="qty-btn" data-action="increase" data-index="${index}">+</button>
+          <button class="qty-btn" data-action="increase" data-index="${index}" aria-label="Aumentar cantidad">+</button>
         </div>
       </div>
-      <button class="cart-item-remove" data-action="remove" data-index="${index}">&times;</button>
+      <button class="cart-item-remove" data-action="remove" data-index="${index}" aria-label="Quitar del carrito">&times;</button>
     </div>
   `).join('');
 

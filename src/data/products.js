@@ -41,23 +41,20 @@ export async function loadProducts(opts = {}) {
   return { products, total, degraded }
 }
 
-// Category labels — cuando NS devuelva getCategoria, se rellenan desde Supabase.
-// Mientras tanto, fallback estatico con categorias genericas.
-// Se usa `all` como opcion especial "todas".
-export let growCategories = {
-  all: 'Todo',
-}
+// Category list — array de tuplas [key, label] para preservar orden de "Todo" primero.
+// (Object con keys numéricas las reordena en JS y mandaba "Todo" al final.)
+export let growCategories = [['all', 'Todo']]
 
 /**
- * Carga categorias desde Supabase. Si NS no ha devuelto categorias aun (bug),
- * devuelve solo el fallback `{ all: 'Todo' }`.
+ * Carga categorías desde Supabase. Solo incluye las que tienen productos
+ * activos (el filtrado lo hace fetchCategories en supabase.js).
  */
 export async function loadCategories() {
   const rows = await fetchCats()
-  const map = { all: 'Todo' }
+  const list = [['all', 'Todo']]
   for (const row of rows) {
-    map[row.ns_id] = row.name
+    list.push([row.ns_id, row.name])
   }
-  growCategories = map
+  growCategories = list
   return growCategories
 }

@@ -33,15 +33,16 @@ function renderBanner() {
   wrapper.id = 'cookie-banner'
   wrapper.className = 'cookie-banner'
   wrapper.setAttribute('role', 'dialog')
+  wrapper.setAttribute('aria-modal', 'false')
   wrapper.setAttribute('aria-labelledby', 'cookie-banner-title')
   wrapper.innerHTML = `
     <div class="cookie-banner-inner">
       <div class="cookie-banner-text">
         <h3 id="cookie-banner-title">Cookies</h3>
         <p>
-          Usamos cookies propias tecnicas esenciales (inicio de sesion, carrito) y,
-          si las aceptas, cookies de analitica anonima para mejorar la web.
-          Consulta la <a href="/cookies.html">politica de cookies</a>.
+          Usamos cookies propias técnicas esenciales (inicio de sesión, carrito) y,
+          si las aceptas, cookies de analítica anónima para mejorar la web.
+          Consulta la <a href="/cookies.html">política de cookies</a>.
         </p>
       </div>
       <div class="cookie-banner-actions">
