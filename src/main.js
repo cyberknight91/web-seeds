@@ -116,11 +116,11 @@ function renderHomePage() {
           <span class="hero-badge">+${totalProductCount} productos</span>
           <span class="hero-badge">Envío 24-48h</span>
           <span class="hero-badge">Stock en directo</span>
-          <span class="hero-badge">Partner Natural Systems</span>
+          <span class="hero-badge">Marcas premium</span>
         </div>
         <div class="hero-cta">
           <a href="#" class="btn btn-primary" data-page="grow">Entrar al catálogo →</a>
-          <a href="#" class="btn btn-secondary" data-page="partners">Ver partners</a>
+          <a href="#" class="btn btn-secondary" data-page="about">Sobre nosotros</a>
         </div>
       </div>
     </section>
@@ -134,16 +134,16 @@ function renderHomePage() {
 
     ${degradedMode ? renderDegradedBanner() : ''}
 
-    <!-- PARTNERS TEASER -->
+    <!-- POR QUÉ NOSOTROS -->
     <section class="partners-section" style="padding: 64px 20px;">
       <div class="partners-wrap">
         <div class="partners-head">
-          <span class="eyebrow">Partner oficial</span>
-          <h2>Distribuidores directos de Natural Systems</h2>
-          <p>Trabajamos en exclusiva con uno de los mayores distribuidores de horticultura técnica de España. Eso se traduce en tres cosas: <strong>stock real minuto a minuto</strong>, catálogo completo de +3000 referencias y <strong>precios de partner</strong> que no consiguen el 95% de las tiendas online.</p>
+          <span class="eyebrow">Por qué Grow El Druida</span>
+          <h2>Cultivo profesional, stock real y envío rápido</h2>
+          <p>Más de <strong>3.000 referencias</strong> de cultivo técnico: iluminación LED, fertilizantes, sustratos, control de clima y medición. <strong>Stock en directo</strong> y envío discreto 24-48h a toda España. Trabajamos con las marcas que de verdad rinden en cultivo intensivo.</p>
         </div>
         <div style="text-align:center;">
-          <a href="#" class="btn btn-primary" data-page="partners">Ver nuestros partners →</a>
+          <a href="#" class="btn btn-primary" data-page="grow">Ver catálogo completo →</a>
         </div>
       </div>
     </section>
@@ -406,61 +406,12 @@ async function renderOffersPage() {
   bindProductEvents();
 }
 
+// La ruta /partners se mantiene por retrocompatibilidad pero redirige al home.
+// Decisión de marca: la web vende productos a nombre de Grow El Druida, sin
+// mencionar distribuidores. Si en el futuro se quieren exponer partners reales
+// de Druida (no proveedores), recuperar esta vista.
 function renderPartnersPage() {
-  const app = document.getElementById('app');
-  app.innerHTML = `
-    <section class="hero-section" style="padding: 60px 20px;">
-      <div class="hero-content fade-in">
-        <h2 class="hero-title">NUESTROS PARTNERS</h2>
-        <p class="hero-subtitle">Trabajamos con los mejores distribuidores de equipamiento profesional de cultivo. Colaboraciones reales, stock garantizado, precios de partner.</p>
-      </div>
-    </section>
-
-    <section class="partners-section">
-      <div class="partners-wrap">
-        <div class="partners-head">
-          <span class="eyebrow">Partner oficial · Equipamiento</span>
-          <h2>Natural Systems — nuestro distribuidor de referencia</h2>
-          <p>Distribuidor oficial. Llevamos años trabajando con Natural Systems porque su catálogo y servicio hablan por sí solos: stock real, marcas premium y resultados que se notan en el cultivo.</p>
-        </div>
-
-        <article class="partner-card">
-          <div class="partner-card-media">
-            <div class="partner-mark">NATURAL<br/>SYSTEMS</div>
-          </div>
-          <div class="partner-card-body">
-            <span class="partner-kicker">Distribuidor horticultura · España</span>
-            <h3>Equipamiento profesional, catálogo completo</h3>
-            <p>
-              Natural Systems es uno de los distribuidores referentes en España en horticultura técnica,
-              con certificaciones ISO 9001, 14001 y 45001. Todo su catálogo de iluminación,
-              fertilizantes, sustratos, control de clima, cultivo y medición está disponible a través
-              de nosotros — con la misma garantía y stock en tiempo real.
-            </p>
-            <div class="partner-feats">
-              <span>Stock sincronizado</span>
-              <span>Marcas premium</span>
-              <span>Certificaciones ISO</span>
-              <span>Envío discreto</span>
-              <span>Precios competitivos</span>
-            </div>
-            <div class="partner-cta-row">
-              <a href="https://naturalsystems.es/" class="btn btn-primary" target="_blank" rel="noopener noreferrer">Visitar Natural Systems →</a>
-              <a href="#" class="btn btn-secondary" data-page="grow">Ver catálogo aquí</a>
-            </div>
-          </div>
-        </article>
-
-        <div style="text-align:center; margin-top:64px;">
-          <h3 style="font-family: var(--font-heading); font-size: 1.5rem; font-weight:600; color: var(--text-primary); margin-bottom:8px;">¿Eres distribuidor o tienda?</h3>
-          <p style="color: var(--text-secondary); max-width:58ch; margin: 0 auto;">Si tienes un grow shop físico o una tienda online y quieres condiciones mayoristas, escríbenos. Trabajamos con pedidos al por mayor bajo acuerdo.</p>
-          <a href="mailto:info@groweldruida.es?subject=Contacto%20B2B" class="btn btn-primary" style="margin-top:20px; display:inline-block;">Contactar para B2B</a>
-        </div>
-      </div>
-    </section>
-  `;
-  bindNavigationEvents();
-  bindProductEvents();
+  navigateTo('home');
 }
 
 function renderAboutPage() {
@@ -478,7 +429,7 @@ function renderAboutPage() {
         <div class="about-text">
           <p><strong>Grow El Druida</strong> nace de la pasión por el cultivo profesional y el equipamiento de alta gama para horticultura técnica.</p>
           <p>Somos un grow shop completo donde encontrarás todo el equipamiento profesional que necesitas: iluminación LED, fertilizantes, sustratos, control de clima, sistemas de cultivo y herramientas de medición.</p>
-          <p>Trabajamos directamente con <strong>Natural Systems</strong> como distribuidor oficial, garantizando la máxima calidad y stock en tiempo real en cada producto del catálogo.</p>
+          <p>Trabajamos con las <strong>marcas más reconocidas</strong> del sector para garantizar la máxima calidad y stock en tiempo real en cada producto del catálogo.</p>
           <p>Nuestro equipo cuenta con más de <strong>20 años de experiencia</strong> en el sector, asesorándote en cada paso de tu proyecto de cultivo.</p>
         </div>
         <img src="/images/logo.jpg" alt="Grow El Druida" class="about-img" loading="lazy" />
@@ -495,9 +446,9 @@ function renderAboutPage() {
           <p>Packaging anonimo y envio rapido a toda Espana</p>
         </div>
         <div class="about-feature">
-          <div class="about-feature-icon">&#127807;</div>
-          <h3>Partner Oficial</h3>
-          <p>Distribuidor autorizado de Natural Systems</p>
+          <div class="about-feature-icon" aria-hidden="true">&#127807;</div>
+          <h3>Marcas Premium</h3>
+          <p>Solo trabajamos con las marcas más reconocidas del sector</p>
         </div>
         <div class="about-feature">
           <div class="about-feature-icon">&#9989;</div>
@@ -1310,10 +1261,10 @@ function updateProductSEO(product) {
  */
 function resetSEOToDefault() {
   document.title = 'Grow El Druida — Grow Shop Profesional | Iluminación, Fertilizantes, Sustratos';
-  setMetaTag('name', 'description', 'Grow shop online con +3000 productos de cultivo profesional: iluminación LED, fertilizantes, sustratos, control de clima y mucho más. Partner oficial de Natural Systems. Envío discreto a toda España.');
+  setMetaTag('name', 'description', 'Grow shop online con +3000 productos de cultivo profesional: iluminación LED, fertilizantes, sustratos, control de clima y mucho más. Envío discreto 24-48h a toda España.');
   setLinkTag('canonical', 'https://groweldruida.es/');
   setMetaTag('property', 'og:title', 'Grow El Druida — Grow Shop Profesional');
-  setMetaTag('property', 'og:description', '+3000 productos de cultivo profesional. Iluminación LED, fertilizantes, sustratos y control de clima. Partner oficial Natural Systems.');
+  setMetaTag('property', 'og:description', '+3000 productos de cultivo profesional. Iluminación LED, fertilizantes, sustratos y control de clima. Envío 24-48h.');
   setMetaTag('property', 'og:url', 'https://groweldruida.es/');
   setMetaTag('property', 'og:image', 'https://groweldruida.es/images/logo.jpg');
   setMetaTag('property', 'og:type', 'website');
@@ -1386,7 +1337,7 @@ function renderLoadingPage() {
       <div class="hero-content">
         <img src="/images/logo.jpg" alt="Grow El Druida" class="hero-logo" width="120" height="120" />
         <h2 class="hero-title" style="font-size: 2rem;">Cargando catálogo...</h2>
-        <p class="hero-subtitle">Conectando con Natural Systems</p>
+        <p class="hero-subtitle">Un momento, preparando productos</p>
       </div>
     </section>
   `;

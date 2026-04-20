@@ -165,7 +165,7 @@ function customerConfirmationHtml(order: OrderPayload): string {
           </p>
         </div>
         <div style="padding:20px; text-align:center; background:#f8f8f8; color:#999; font-size:12px; border-top:1px solid #eee;">
-          <p style="margin:0 0 6px;">Grow El Druida · Partner oficial Natural Systems</p>
+          <p style="margin:0 0 6px;">Grow El Druida · Grow Shop Profesional</p>
           <p style="margin:0;">Este email se envió porque realizaste un pedido en nuestra tienda.</p>
         </div>
       </div>

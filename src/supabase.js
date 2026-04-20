@@ -6,7 +6,7 @@ const SUPABASE_ANON_KEY = 'sb_publishable_qm8QfrXWNBGrYLXS3MuZvA_C3BM57_4'
 export const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
 
 // ============================================
-// CATALOGO (productos desde Natural Systems sync)
+// CATALOGO (productos sincronizados desde el proveedor vía Worker)
 // ============================================
 
 /**
