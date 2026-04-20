@@ -20,3 +20,37 @@ export function formatEur(n) {
   if (!isFinite(num)) return '0.00 €';
   return `${num.toFixed(2)} €`;
 }
+
+// ============================================
+// POLÍTICA DE ENVÍOS Y PEDIDO MÍNIMO
+// ============================================
+
+/** Pedido mínimo absoluto. Evita que Stripe se coma el margen en carritos ridículos. */
+export const MIN_ORDER_VALUE = 20;
+
+/** Umbral a partir del cual el envío pasa a ser gratuito. */
+export const FREE_SHIPPING_FROM = 50;
+
+/** Coste de envío por debajo del umbral de gratuidad. */
+export const FLAT_SHIPPING_COST = 4.9;
+
+/**
+ * Calcula el coste de envío y metadatos (si es gratis, cuánto falta para
+ * llegar al umbral de gratuidad). `subtotal` es el importe del carrito.
+ */
+export function computeShipping(subtotal) {
+  const sub = Number(subtotal) || 0;
+  if (sub >= FREE_SHIPPING_FROM) {
+    return { cost: 0, free: true, remainingForFree: 0 };
+  }
+  return {
+    cost: FLAT_SHIPPING_COST,
+    free: false,
+    remainingForFree: Math.max(0, FREE_SHIPPING_FROM - sub),
+  };
+}
+
+/** True si el subtotal alcanza el pedido mínimo. */
+export function meetsMinOrder(subtotal) {
+  return (Number(subtotal) || 0) >= MIN_ORDER_VALUE;
+}

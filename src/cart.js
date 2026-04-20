@@ -2,7 +2,7 @@
 // CART SYSTEM
 // ============================================
 
-import { esc } from './utils.js';
+import { esc, computeShipping, MIN_ORDER_VALUE, FREE_SHIPPING_FROM } from './utils.js';
 
 class Cart {
   constructor() {
@@ -61,9 +61,38 @@ export function renderCart() {
   const cartItems = document.getElementById('cart-items');
   const cartCount = document.getElementById('cart-count');
   const cartTotal = document.getElementById('cart-total-price');
+  const shippingMsg = document.getElementById('cart-shipping-msg');
+  const checkoutBtn = document.querySelector('.checkout-btn');
 
   cartCount.textContent = cart.getCount();
-  cartTotal.innerHTML = `${cart.getTotal().toFixed(2)} &euro;`;
+  const subtotal = cart.getTotal();
+  cartTotal.innerHTML = `${subtotal.toFixed(2)} &euro;`;
+
+  // Aviso progresivo de envío y bloqueo de pedido mínimo
+  if (shippingMsg) {
+    if (cart.items.length === 0) {
+      shippingMsg.innerHTML = '';
+      shippingMsg.className = 'cart-shipping-msg';
+    } else if (subtotal < MIN_ORDER_VALUE) {
+      const missing = (MIN_ORDER_VALUE - subtotal).toFixed(2);
+      shippingMsg.innerHTML = `Pedido mínimo <strong>${MIN_ORDER_VALUE.toFixed(2)}&nbsp;&euro;</strong>. Te faltan ${missing}&nbsp;&euro;.`;
+      shippingMsg.className = 'cart-shipping-msg cart-shipping-warn';
+    } else {
+      const ship = computeShipping(subtotal);
+      if (ship.free) {
+        shippingMsg.innerHTML = '&#10003; <strong>Envío gratis</strong> en este pedido.';
+        shippingMsg.className = 'cart-shipping-msg cart-shipping-ok';
+      } else {
+        shippingMsg.innerHTML = `Te faltan <strong>${ship.remainingForFree.toFixed(2)}&nbsp;&euro;</strong> para envío gratis (desde ${FREE_SHIPPING_FROM}&nbsp;&euro;).`;
+        shippingMsg.className = 'cart-shipping-msg';
+      }
+    }
+  }
+  if (checkoutBtn) {
+    const blocked = cart.items.length === 0 || subtotal < MIN_ORDER_VALUE;
+    checkoutBtn.disabled = blocked;
+    checkoutBtn.classList.toggle('is-disabled', blocked);
+  }
 
   if (cart.items.length === 0) {
     cartItems.innerHTML = `

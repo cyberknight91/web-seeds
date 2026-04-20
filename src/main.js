@@ -14,7 +14,7 @@ import { cart, renderCart, showToast } from './cart.js';
 import { initAuth, getCurrentUser, getProfile, updateProfile } from './auth.js';
 import { saveOrder, getMyOrders } from './orders.js';
 import { initCookieBanner } from './cookies.js';
-import { esc } from './utils.js';
+import { esc, computeShipping, meetsMinOrder, MIN_ORDER_VALUE, FREE_SHIPPING_FROM } from './utils.js';
 
 // ============================================
 // APP STATE
@@ -836,7 +836,12 @@ function initCart() {
   // Checkout button
   document.querySelector('.checkout-btn').addEventListener('click', () => {
     if (cart.items.length === 0) {
-      showToast('Tu carrito esta vacio');
+      showToast('Tu carrito está vacío');
+      return;
+    }
+    if (!meetsMinOrder(cart.getTotal())) {
+      const missing = (MIN_ORDER_VALUE - cart.getTotal()).toFixed(2);
+      showToast(`Pedido mínimo ${MIN_ORDER_VALUE}€. Te faltan ${missing}€`);
       return;
     }
     closeCart();
@@ -942,17 +947,18 @@ function buildOrderText() {
     `${i + 1}. ${item.name} (${item.label}) x${item.quantity} = ${(item.price * item.quantity).toFixed(2)}EUR`
   ).join('\n');
 
-  const total = cart.getTotal().toFixed(2);
-  const envio = cart.getTotal() >= 50 ? 'GRATIS' : '5.00 EUR';
-  const totalFinal = cart.getTotal() >= 50 ? total : (cart.getTotal() + 5).toFixed(2);
+  const subtotal = cart.getTotal();
+  const ship = computeShipping(subtotal);
+  const envioTxt = ship.free ? 'GRATIS' : `${ship.cost.toFixed(2)} EUR`;
+  const totalFinal = (subtotal + ship.cost).toFixed(2);
 
   return `NUEVO PEDIDO - Grow El Druida
 =========================================
 PRODUCTOS:
 ${items}
 
-Subtotal: ${total} EUR
-Envio: ${envio}
+Subtotal: ${subtotal.toFixed(2)} EUR
+Envio: ${envioTxt}
 TOTAL: ${totalFinal} EUR
 =========================================
 DATOS DEL CLIENTE:
@@ -968,15 +974,16 @@ ${checkoutData.notes ? `Notas: ${checkoutData.notes}` : ''}
 
 function renderCheckoutSummary() {
   const summary = document.getElementById('checkout-summary');
-  const envio = cart.getTotal() >= 50 ? 0 : 5;
-  const totalFinal = cart.getTotal() + envio;
+  const subtotal = cart.getTotal();
+  const ship = computeShipping(subtotal);
+  const totalFinal = subtotal + ship.cost;
 
   summary.innerHTML = `
     <div class="summary-section">
       <h3>Productos</h3>
       ${cart.items.map(item => `
         <div class="summary-item">
-          <span>${item.name} (${item.label}) x${item.quantity}</span>
+          <span>${esc(item.name)} (${esc(item.label)}) x${item.quantity}</span>
           <span class="summary-price">${(item.price * item.quantity).toFixed(2)} &euro;</span>
         </div>
       `).join('')}
@@ -984,12 +991,13 @@ function renderCheckoutSummary() {
     <div class="summary-section">
       <div class="summary-item">
         <span>Subtotal</span>
-        <span>${cart.getTotal().toFixed(2)} &euro;</span>
+        <span>${subtotal.toFixed(2)} &euro;</span>
       </div>
       <div class="summary-item">
-        <span>Envio</span>
-        <span>${envio === 0 ? '<span class="neon-tag">GRATIS</span>' : '5.00 &euro;'}</span>
+        <span>Envío</span>
+        <span>${ship.free ? '<span class="neon-tag">GRATIS</span>' : `${ship.cost.toFixed(2)} &euro;`}</span>
       </div>
+      ${!ship.free ? `<div class="summary-item" style="font-size:0.82rem;color:var(--text-muted);"><span>Añade ${ship.remainingForFree.toFixed(2)} € más para envío gratis (desde ${FREE_SHIPPING_FROM} €)</span><span></span></div>` : ''}
       <div class="summary-item summary-total">
         <span>TOTAL</span>
         <span>${totalFinal.toFixed(2)} &euro;</span>

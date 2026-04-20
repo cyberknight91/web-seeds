@@ -1,9 +1,11 @@
 import { supabase } from './supabase.js'
 import { getCurrentUser, getProfile } from './auth.js'
+import { computeShipping } from './utils.js'
 
 export async function saveOrder(checkoutData, cartItems, subtotal) {
   const user = getCurrentUser()
-  const shippingCost = subtotal >= 50 ? 0 : 5
+  const ship = computeShipping(subtotal)
+  const shippingCost = ship.cost
   const total = subtotal + shippingCost
 
   // Insert order
